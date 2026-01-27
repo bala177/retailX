@@ -8,8 +8,12 @@ import {
   getProductsByCategory,
 } from '../controllers/productController';
 import { identifyTenant } from '../middleware/tenant';
+import { apiLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
+
+// Apply rate limiting to all routes
+router.use(apiLimiter);
 
 // All product routes require tenant identification
 router.use(identifyTenant);
