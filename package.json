@@ -1,0 +1,31 @@
+{
+  "name": "retailx-platform",
+  "version": "1.0.0",
+  "description": "Multi-tenant eCommerce platform for unlimited independent online stores",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "admin",
+    "storefront"
+  ],
+  "scripts": {
+    "install:all": "npm install && cd backend && npm install && cd ../admin && npm install && cd ../storefront && npm install",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:admin": "cd admin && npm run dev",
+    "dev:storefront": "cd storefront && npm run dev",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:admin\" \"npm run dev:storefront\"",
+    "build:admin": "cd admin && npm run build",
+    "build:storefront": "cd storefront && npm run build",
+    "build": "npm run build:admin && npm run build:storefront",
+    "seed": "cd backend && npm run seed",
+    "test": "cd backend && npm test"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "RetailX Platform",
+  "license": "MIT"
+}
