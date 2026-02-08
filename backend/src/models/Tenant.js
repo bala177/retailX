@@ -73,6 +73,16 @@ const tenantSchema = new mongoose.Schema(
         type: String,
         default: null,
       },
+      heroBanner: {
+        type: String,
+        default: null,
+        description: "Main hero/banner image for store homepage (1920x600px recommended)",
+      },
+      heroBannerAlt: {
+        type: String,
+        default: null,
+        description: "Alternative hero banner for seasonal campaigns",
+      },
       primaryColor: {
         type: String,
         default: "#3B82F6",

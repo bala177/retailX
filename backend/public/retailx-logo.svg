@@ -1,0 +1,25 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="100" cy="100" r="95" fill="#E91E63" opacity="0.1"/>
+  <circle cx="100" cy="100" r="90" fill="#E91E63"/>
+  
+  <!-- Shopping Bag Shape -->
+  <g transform="translate(100, 100)">
+    <!-- Bag handles -->
+    <path d="M -25 -20 Q -25 -40 -10 -45 Q 10 -40 25 -20" stroke="white" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Bag body -->
+    <rect x="-30" y="-15" width="60" height="60" rx="4" fill="white"/>
+    
+    <!-- Bag front shine/fold -->
+    <path d="M -30 -15 L -20 40 L 20 40 L 30 -15" fill="#E91E63" opacity="0.15"/>
+    
+    <!-- Decorative lines for products inside -->
+    <line x1="-20" y1="0" x2="20" y2="0" stroke="#E91E63" stroke-width="3" stroke-linecap="round"/>
+    <line x1="-18" y1="12" x2="18" y2="12" stroke="#E91E63" stroke-width="3" stroke-linecap="round"/>
+    <line x1="-15" y1="24" x2="15" y2="24" stroke="#E91E63" stroke-width="3" stroke-linecap="round"/>
+    
+    <!-- Center dot accent -->
+    <circle cx="0" cy="35" r="4" fill="#E91E63"/>
+  </g>
+</svg>

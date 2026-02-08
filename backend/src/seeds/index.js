@@ -33,7 +33,6 @@ const seedData = async () => {
     // Note: Store owners are created per-store below
     // Each store owner represents a CUSTOMER who purchased RetailX from you
 
-
     // ═══════════════════════════════════════════════════════════════════════
     // STORE 2: FRESHMART GROCERY (Supermarket / Grocery)
     // ═══════════════════════════════════════════════════════════════════════
@@ -238,6 +237,8 @@ const seedData = async () => {
       domains: { subdomain: "glamour-hair" },
       branding: {
         logo: "/uploads/logos/glamour-hair.png",
+        heroBanner: "/uploads/heroes/glamour-hair-hero.jpg",
+        heroBannerAlt: "/uploads/heroes/glamour-hair-hero-alt.jpg",
         primaryColor: "#E91E63",
         secondaryColor: "#C2185B",
         accentColor: "#F48FB1",
@@ -1102,7 +1103,6 @@ const seedData = async () => {
     ];
 
     await Product.insertMany(podologieProducts);
-
 
     // ═══════════════════════════════════════════════════════════════════════
     // UPDATE STATS AND CREATE DEMO CUSTOMERS
