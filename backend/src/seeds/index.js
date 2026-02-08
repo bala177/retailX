@@ -237,8 +237,8 @@ const seedData = async () => {
       domains: { subdomain: "glamour-hair" },
       branding: {
         logo: "/uploads/logos/glamour-hair.png",
-        heroBanner: "/uploads/heroes/glamour-hair-hero.jpg",
-        heroBannerAlt: "/uploads/heroes/glamour-hair-hero-alt.jpg",
+        heroBanner: "/uploads/heroes/glamour-hair-hero.png",
+        heroBannerAlt: "/uploads/heroes/glamour-hair-hero-alt.png",
         primaryColor: "#E91E63",
         secondaryColor: "#C2185B",
         accentColor: "#F48FB1",

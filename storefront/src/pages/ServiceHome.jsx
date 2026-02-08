@@ -12,6 +12,16 @@ import BookingModal from "../components/BookingModal";
 import { ArrowRight, Star, Clock, Phone, MapPin, Sparkles, CheckCircle, BadgeCheck, Gift, Users, Award, Heart, Calendar, Footprints } from "lucide-react";
 import { useState, useEffect } from "react";
 
+// Resolve image URL - handles both absolute URLs and relative upload paths
+const resolveImageUrl = (url) => {
+  if (!url) return null;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  // For relative paths like /uploads/heroes/..., prepend the API origin
+  const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+  const origin = apiBase.replace(/\/api\/v1$/, '');
+  return `${origin}${url}`;
+};
+
 export default function ServiceHome() {
   const { store, storeSlug } = useStore();
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -85,6 +95,11 @@ export default function ServiceHome() {
   };
 
   const hero = heroContent[serviceType] || heroContent.spa;
+
+  // Use hero banner from database if available (uploaded via admin)
+  if (store?.branding?.heroBanner) {
+    hero.image = resolveImageUrl(store.branding.heroBanner);
+  }
 
   // Stats/achievements
   const stats = [
