@@ -544,22 +544,26 @@ npm test -- --testPathPattern=auth
 ### Manual Deployment
 
 #### Prerequisites
+
 1. **MongoDB Atlas Account** - Create a free cluster at [mongodb.com/atlas](https://www.mongodb.com/atlas)
 2. **Render Account** - Sign up at [render.com](https://render.com)
 
 #### Step 1: Set up MongoDB Atlas
+
 1. Create a new cluster (free tier available)
 2. Create a database user with read/write access
 3. Whitelist `0.0.0.0/0` for Render access
 4. Get your connection string: `mongodb+srv://username:password@cluster.mongodb.net/retailx`
 
 #### Step 2: Deploy to Render
+
 1. Go to [Render Dashboard](https://dashboard.render.com)
 2. Click **New** → **Blueprint**
 3. Connect your GitHub repo: `https://github.com/bala177/retailX`
 4. Render will detect `render.yaml` and create all services
 
 #### Step 3: Configure Environment Variables
+
 In Render Dashboard, set these for `retailx-api`:
 | Variable | Value |
 |----------|-------|
@@ -568,16 +572,19 @@ In Render Dashboard, set these for `retailx-api`:
 | `CORS_ORIGIN` | `https://retailx-admin.onrender.com,https://retailx-storefront.onrender.com` |
 
 #### Step 4: Seed the Database
+
 After deployment, run in Render Shell:
+
 ```bash
 npm run seed
 ```
 
 ### Your URLs (after deployment)
-| Service | URL |
-|---------|-----|
-| **API** | `https://retailx-api.onrender.com` |
-| **Admin** | `https://retailx-admin.onrender.com` |
+
+| Service        | URL                                       |
+| -------------- | ----------------------------------------- |
+| **API**        | `https://retailx-api.onrender.com`        |
+| **Admin**      | `https://retailx-admin.onrender.com`      |
 | **Storefront** | `https://retailx-storefront.onrender.com` |
 
 ---
