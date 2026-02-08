@@ -36,7 +36,6 @@ services:
   - type: web
     name: retailx-admin
     runtime: static
-    region: oregon
     plan: free
     rootDir: admin
     buildCommand: npm install && npm run build
@@ -62,7 +61,6 @@ services:
   - type: web
     name: retailx-storefront
     runtime: static
-    region: oregon
     plan: free
     rootDir: storefront
     buildCommand: npm install && npm run build
