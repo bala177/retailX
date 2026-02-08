@@ -31,9 +31,10 @@ export default function Login() {
   // Demo accounts for quick login
   const demoAccounts = [
     { label: "Super Admin", email: "superadmin@retailx.com", password: "SuperAdmin@123456" },
-    { label: "Fashion Store", email: "owner@urbanfashion.com", password: "Owner@123456" },
+    { label: "FreshMart", email: "owner@freshmart.com", password: "Owner@123456" },
+    { label: "Hair Studio", email: "owner@glamourhair.com", password: "Owner@123456" },
     { label: "Spa Store", email: "owner@tranquilspa.com", password: "Owner@123456" },
-    { label: "Beauty Store", email: "owner@glowbeauty.com", password: "Owner@123456" },
+    { label: "Foot Clinic", email: "owner@healthyfeet.com", password: "Owner@123456" },
   ];
 
   const handleDemoLogin = (account) => {
