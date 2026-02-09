@@ -30,3 +30,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pids/
+
+# Database exports
+backend/db_export/
