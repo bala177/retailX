@@ -24,29 +24,58 @@ export default function StoreSelector() {
   const [stores, setStores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const [isWakingUp, setIsWakingUp] = useState(false);
 
-  // Fetch stores from API
+  // Fetch stores from API with auto-retry for Render cold starts
   useEffect(() => {
     fetchStores();
   }, []);
 
-  const fetchStores = async () => {
+  const fetchStores = async (attempt = 0) => {
+    const maxRetries = 3;
     try {
       setLoading(true);
       setError(null);
+      if (attempt > 0) {
+        setIsWakingUp(true);
+      }
       const response = await platformAPI.getStores();
-      const storesList = response.data.data.stores;
+      const storesList = response.data?.data?.stores || [];
       setStores(storesList);
+      setIsWakingUp(false);
+      setRetryCount(0);
+      setLoading(false);
 
       // If current storeSlug is not in the list, it's invalid - clear it
       if (storeSlug && !storesList.find((s) => s.slug === storeSlug)) {
         localStorage.removeItem("storeSlug");
       }
     } catch (err) {
-      console.error("Failed to fetch stores:", err);
-      setError("Failed to load stores. Please try again.");
-    } finally {
+      console.error(`Failed to fetch stores (attempt ${attempt + 1}/${maxRetries + 1}):`, err);
+
+      // Auto-retry for network errors or 5xx (likely cold start)
+      const isNetworkError = !err.response || err.code === "ECONNABORTED" || err.code === "ERR_NETWORK";
+      const isServerError = err.response?.status >= 500;
+
+      if ((isNetworkError || isServerError) && attempt < maxRetries) {
+        setIsWakingUp(true);
+        setRetryCount(attempt + 1);
+        // Exponential backoff: 2s, 4s, 8s
+        const delay = Math.pow(2, attempt + 1) * 1000;
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        return fetchStores(attempt + 1);
+      }
+
+      setIsWakingUp(false);
       setLoading(false);
+      setError(
+        isNetworkError
+          ? "Server is starting up. Please wait a moment and try again."
+          : "Failed to load stores. Please try again."
+      );
+    } finally {
+      // Loading is cleared in success/error paths above
     }
   };
 
@@ -126,7 +155,10 @@ export default function StoreSelector() {
         {loading && (
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 className="w-12 h-12 text-indigo-500 animate-spin mb-4" />
-            <p className="text-gray-400">Loading stores...</p>
+            <p className="text-gray-400">{isWakingUp ? "Server is waking up, please wait..." : "Loading stores..."}</p>
+            {isWakingUp && (
+              <p className="text-gray-500 text-sm mt-2">This may take up to 30 seconds on first visit</p>
+            )}
           </div>
         )}
 

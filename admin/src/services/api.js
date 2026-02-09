@@ -13,6 +13,7 @@ export const resolveImageUrl = (url) => {
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 30000, // 30s timeout - Render free tier cold starts can take 20-30s
   headers: {
     "Content-Type": "application/json",
   },

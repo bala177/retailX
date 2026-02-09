@@ -55,11 +55,12 @@ export default function SuperAdminStores() {
         page: pagination.page,
         limit: 10,
       });
-      setStores(response.data.data.stores);
-      setPagination(response.data.data.pagination);
+      setStores(response.data?.data?.stores || []);
+      setPagination(response.data?.data?.pagination || { page: 1, total: 0, pages: 0 });
     } catch (error) {
       console.error("Failed to fetch stores:", error);
-      toast.error("Failed to load stores");
+      const isNetworkError = !error.response || error.code === "ECONNABORTED" || error.code === "ERR_NETWORK";
+      toast.error(isNetworkError ? "Server is starting up. Please wait and refresh." : "Failed to load stores");
     } finally {
       setLoading(false);
     }
