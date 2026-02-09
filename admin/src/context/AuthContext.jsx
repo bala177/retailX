@@ -70,13 +70,28 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const refreshUser = async () => {
+    try {
+      const response = await authAPI.getProfile();
+      const updatedUser = response.data?.data?.user || response.data?.data;
+      if (updatedUser) {
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        setUser(updatedUser);
+      }
+    } catch (error) {
+      console.error("Failed to refresh user:", error);
+    }
+  };
+
   const value = {
     user,
     loading,
     login,
     logout,
+    refreshUser,
     isAuthenticated: !!user,
     isSuperAdmin: user?.role === "super_admin",
+    isPlatformOwner: user?.role === "super_admin",
     isStoreOwner: user?.role === "store_owner",
     isStoreStaff: user?.role === "store_staff",
     // Only super admin can access platform features now

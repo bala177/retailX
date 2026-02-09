@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
+import { useTenant } from "./context/TenantContext";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Products";
@@ -10,6 +12,12 @@ import OrderDetail from "./pages/OrderDetail";
 import Customers from "./pages/Customers";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
+import Reviews from "./pages/Reviews";
+import Coupons from "./pages/Coupons";
+import Bookings from "./pages/Bookings";
+import Staff from "./pages/Staff";
+import ContactMessages from "./pages/ContactMessages";
+import StoreSetupWizard from "./pages/StoreSetupWizard";
 import Layout from "./components/Layout";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import SuperAdminStores from "./pages/SuperAdminStores";
@@ -59,9 +67,19 @@ const SuperAdminRoute = ({ children }) => {
 };
 
 function App() {
+  const [setupDismissed, setSetupDismissed] = useState(false);
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route
+        path="/setup"
+        element={
+          <ProtectedRoute>
+            <StoreSetupWizard onComplete={() => setSetupDismissed(true)} />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/*"
         element={
@@ -76,6 +94,11 @@ function App() {
                 <Route path="/orders" element={<Orders />} />
                 <Route path="/orders/:id" element={<OrderDetail />} />
                 <Route path="/customers" element={<Customers />} />
+                <Route path="/reviews" element={<Reviews />} />
+                <Route path="/coupons" element={<Coupons />} />
+                <Route path="/bookings" element={<Bookings />} />
+                <Route path="/staff" element={<Staff />} />
+                <Route path="/messages" element={<ContactMessages />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/profile" element={<Profile />} />
 

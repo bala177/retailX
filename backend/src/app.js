@@ -29,8 +29,8 @@ app.use(requestId);
 app.use("/api/", generalRateLimiter);
 
 // Body parsing
-app.use(express.json({ limit: "10kb" }));
-app.use(express.urlencoded({ extended: true, limit: "10kb" }));
+app.use(express.json({ limit: "50kb" }));
+app.use(express.urlencoded({ extended: true, limit: "50kb" }));
 app.use(cookieParser());
 
 // Data sanitization

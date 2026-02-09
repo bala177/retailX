@@ -63,7 +63,7 @@ export const authAPI = {
   getProfile: () => api.get("/auth/me"),
   refreshToken: (refreshToken) => api.post("/auth/refresh-token", { refreshToken }),
   changePassword: (data) => api.patch("/auth/change-password", data),
-  updateProfile: (data) => api.patch("/auth/profile", data),
+  updateProfile: (data) => api.patch("/auth/me", data),
 };
 
 // Tenant APIs (Platform Admin)
@@ -109,10 +109,54 @@ export const createStoreAPI = (tenantSlug) => ({
     getById: (id) => api.get(`/store/${tenantSlug}/customers/${id}`),
   },
 
+  // Reviews
+  reviews: {
+    getAll: (params) => api.get(`/store/${tenantSlug}/admin/reviews`, { params }),
+    update: (id, data) => api.patch(`/store/${tenantSlug}/admin/reviews/${id}`, data),
+    delete: (id) => api.delete(`/store/${tenantSlug}/reviews/${id}`),
+  },
+
+  // Coupons
+  coupons: {
+    getAll: () => api.get(`/store/${tenantSlug}/admin/coupons`),
+    create: (data) => api.post(`/store/${tenantSlug}/admin/coupons`, data),
+    update: (id, data) => api.patch(`/store/${tenantSlug}/admin/coupons/${id}`, data),
+    delete: (id) => api.delete(`/store/${tenantSlug}/admin/coupons/${id}`),
+  },
+
+  // Bookings
+  bookings: {
+    getAll: (params) => api.get(`/store/${tenantSlug}/admin/bookings`, { params }),
+    update: (id, data) => api.patch(`/store/${tenantSlug}/admin/bookings/${id}`, data),
+  },
+
+  // Staff
+  staff: {
+    getAll: () => api.get(`/store/${tenantSlug}/staff`),
+    create: (data) => api.post(`/store/${tenantSlug}/admin/staff`, data),
+    update: (id, data) => api.patch(`/store/${tenantSlug}/admin/staff/${id}`, data),
+    delete: (id) => api.delete(`/store/${tenantSlug}/admin/staff/${id}`),
+  },
+
+  // Contact / Newsletter
+  contact: {
+    getMessages: (params) => api.get(`/store/${tenantSlug}/admin/contact`, { params }),
+    updateMessage: (id, data) => api.patch(`/store/${tenantSlug}/admin/contact/${id}`, data),
+    getSubscribers: () => api.get(`/store/${tenantSlug}/admin/newsletter`),
+  },
+
+  // Settings
+  settings: {
+    update: (data) => api.patch(`/store/${tenantSlug}/settings`, data),
+  },
+
   // Dashboard Stats
   stats: {
     get: () => api.get(`/store/${tenantSlug}/stats`),
   },
+
+  // Upload
+  upload: (type, formData) => api.post(`/store/${tenantSlug}/upload/${type}`, formData, { headers: { "Content-Type": "multipart/form-data" } }),
 });
 
 // Super Admin APIs (RetailX Platform Control)

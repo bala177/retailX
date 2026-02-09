@@ -10,12 +10,18 @@ const config = require("../config");
  */
 const resolveTenant = async (req, res, next) => {
   try {
-    // Skip tenant resolution for public platform routes (no tenant needed)
-    const skipTenantPaths = ["/api/v1/stores", "/api/v1/health", "/api/v1/platform", "/api/v1/super-admin", "/api/v1/auth/login", "/api/v1/auth/register"];
+    // Skip tenant resolution entirely for routes that never need tenant context
+    const skipTenantPaths = ["/api/v1/stores", "/api/v1/health", "/api/v1/platform", "/api/v1/super-admin"];
 
     if (skipTenantPaths.some((path) => req.path.startsWith(path))) {
       return next();
     }
+
+    // Auth routes: optionally resolve tenant (don't skip, don't require)
+    // This allows store owners to login with x-store-slug header while
+    // super admins can login without tenant context
+    const optionalTenantPaths = ["/api/v1/auth/login", "/api/v1/auth/register"];
+    const isOptionalTenant = optionalTenantPaths.some((path) => req.path.startsWith(path));
 
     let tenantIdentifier = null;
     const resolutionMode = config.tenant.resolutionMode;
@@ -65,6 +71,11 @@ const resolveTenant = async (req, res, next) => {
 
     // If no tenant identifier found, check if this is a public route
     if (!tenantIdentifier) {
+      // Auth routes with optional tenant - just continue without tenant
+      if (isOptionalTenant) {
+        return next();
+      }
+
       // Allow certain routes without tenant
       const publicPaths = ["/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/platform", "/api/v1/tenants", "/api/v1/health", "/health", "/api/v1/store/", "/api/v1/stores", "/api/v1/super-admin"];
 

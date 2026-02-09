@@ -1,21 +1,53 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { authAPI } from "../services/api";
-import { User, Mail, Phone, Lock, Save, Eye, EyeOff, Shield, Store } from "lucide-react";
+import { User, Mail, Phone, Lock, Save, Eye, EyeOff, Shield, Store, Pencil, X as XIcon } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [activeTab, setActiveTab] = useState("profile");
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const [profileForm, setProfileForm] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+  });
+
+  useEffect(() => {
+    if (user) {
+      setProfileForm({
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        phone: user.phone || "",
+      });
+    }
+  }, [user]);
 
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    setIsUpdating(true);
+    try {
+      await authAPI.updateProfile(profileForm);
+      toast.success("Profile updated successfully");
+      setIsEditing(false);
+      if (typeof refreshUser === "function") refreshUser();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update profile");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
@@ -98,52 +130,95 @@ export default function Profile() {
         <div className="p-6">
           {activeTab === "profile" && (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                  <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-lg">
-                    <User className="w-5 h-5 text-gray-400" />
-                    <span className="text-gray-900">{user?.firstName}</span>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                  <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-lg">
-                    <User className="w-5 h-5 text-gray-400" />
-                    <span className="text-gray-900">{user?.lastName}</span>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                  <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-lg">
-                    <Mail className="w-5 h-5 text-gray-400" />
-                    <span className="text-gray-900">{user?.email}</span>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                  <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-lg">
-                    <Phone className="w-5 h-5 text-gray-400" />
-                    <span className="text-gray-900">{user?.phone || "Not set"}</span>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                  <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-lg">
-                    <Shield className="w-5 h-5 text-gray-400" />
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${roleBadge.color}`}>{roleBadge.label}</span>
-                  </div>
-                </div>
-                {user?.tenant && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Store</label>
-                    <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-lg">
-                      <Store className="w-5 h-5 text-gray-400" />
-                      <span className="text-gray-900">{user?.tenant?.name || "Assigned Store"}</span>
-                    </div>
-                  </div>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Profile Information</h3>
+                {!isEditing ? (
+                  <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors">
+                    <Pencil className="w-4 h-4" />
+                    Edit Profile
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setIsEditing(false);
+                      setProfileForm({ firstName: user?.firstName || "", lastName: user?.lastName || "", phone: user?.phone || "" });
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    <XIcon className="w-4 h-4" />
+                    Cancel
+                  </button>
                 )}
               </div>
+              <form onSubmit={handleProfileUpdate}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                    {isEditing ? (
+                      <input type="text" value={profileForm.firstName} onChange={(e) => setProfileForm({ ...profileForm, firstName: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                    ) : (
+                      <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-lg">
+                        <User className="w-5 h-5 text-gray-400" />
+                        <span className="text-gray-900">{user?.firstName}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                    {isEditing ? (
+                      <input type="text" value={profileForm.lastName} onChange={(e) => setProfileForm({ ...profileForm, lastName: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                    ) : (
+                      <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-lg">
+                        <User className="w-5 h-5 text-gray-400" />
+                        <span className="text-gray-900">{user?.lastName}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-lg">
+                      <Mail className="w-5 h-5 text-gray-400" />
+                      <span className="text-gray-900">{user?.email}</span>
+                    </div>
+                    {isEditing && <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                    {isEditing ? (
+                      <input type="tel" value={profileForm.phone} onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })} placeholder="Enter phone number" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                    ) : (
+                      <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-lg">
+                        <Phone className="w-5 h-5 text-gray-400" />
+                        <span className="text-gray-900">{user?.phone || "Not set"}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                    <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-lg">
+                      <Shield className="w-5 h-5 text-gray-400" />
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${roleBadge.color}`}>{roleBadge.label}</span>
+                    </div>
+                  </div>
+                  {user?.tenant && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Store</label>
+                      <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-lg">
+                        <Store className="w-5 h-5 text-gray-400" />
+                        <span className="text-gray-900">{user?.tenant?.name || "Assigned Store"}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {isEditing && (
+                  <div className="mt-6">
+                    <button type="submit" disabled={isUpdating} className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50">
+                      <Save className="w-5 h-5" />
+                      {isUpdating ? "Saving..." : "Save Changes"}
+                    </button>
+                  </div>
+                )}
+              </form>
             </div>
           )}
 

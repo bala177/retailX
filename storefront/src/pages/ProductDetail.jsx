@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useStore } from "../context/StoreContext";
 import { useCart } from "../context/CartContext";
-import { productsAPI } from "../services/api";
+import { productsAPI, reviewsAPI } from "../services/api";
 import ProductCard from "../components/ProductCard";
 import ServiceCard from "../components/ServiceCard";
 import BookingModal from "../components/BookingModal";
@@ -52,6 +52,15 @@ export default function ProductDetail() {
 
   const product = productData?.data?.data?.product;
   const relatedProducts = relatedData?.data?.data?.products?.filter((p) => p._id !== product?._id) || [];
+
+  // Fetch real reviews for this product
+  const { data: reviewsData } = useQuery({
+    queryKey: ["product-reviews", product?._id],
+    queryFn: () => reviewsAPI.getByProduct(product._id),
+    enabled: !!product?._id,
+  });
+
+  const apiReviews = reviewsData?.data?.data?.reviews || [];
 
   // Reset state when product changes
   useEffect(() => {
@@ -114,7 +123,14 @@ export default function ProductDetail() {
     );
   }
 
-  const images = product.images?.length > 0 ? product.images : [{ url: product.primaryImage || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600" }];
+  const resolveUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith("http://") || url.startsWith("https://")) return url;
+    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
+    return `${apiBase.replace(/\/api\/v1$/, "")}${url}`;
+  };
+  const rawImages = product.images?.length > 0 ? product.images : [{ url: product.primaryImage || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600" }];
+  const images = rawImages.map((img) => ({ ...img, url: resolveUrl(img.url) || img.url }));
 
   // Get prices from product schema
   const currentPrice = product.pricing?.salePrice || product.pricing?.basePrice || product.currentPrice || 0;
@@ -194,20 +210,29 @@ export default function ProductDetail() {
     );
   };
 
-  // Generate fake reviews for demo
-  const fakeReviews = isServiceBased
-    ? [
-        { name: "John D.", rating: 5, date: "2 days ago", comment: "Excellent service! Very professional and relaxing experience. Highly recommended.", helpful: 12 },
-        { name: "Sarah M.", rating: 4, date: "1 week ago", comment: "Very good session. The therapist was skilled and attentive. Will definitely book again.", helpful: 8 },
-        { name: "Mike R.", rating: 5, date: "2 weeks ago", comment: "Amazing experience. Best service I've had. Worth every penny!", helpful: 15 },
-        { name: "Emily L.", rating: 5, date: "3 weeks ago", comment: "Love it! Perfect for relaxation. The ambiance was wonderful too.", helpful: 6 },
-      ]
-    : [
-        { name: "John D.", rating: 5, date: "2 days ago", comment: "Excellent product! Exactly as described. Fast shipping and great quality.", helpful: 12 },
-        { name: "Sarah M.", rating: 4, date: "1 week ago", comment: "Very good quality. Would recommend to others. Only minor issue was the packaging.", helpful: 8 },
-        { name: "Mike R.", rating: 5, date: "2 weeks ago", comment: "Amazing value for money. This exceeded my expectations in every way.", helpful: 15 },
-        { name: "Emily L.", rating: 5, date: "3 weeks ago", comment: "Love it! Perfect for what I needed. Will definitely buy again.", helpful: 6 },
-      ];
+  // Use real reviews from API, with fallback demo reviews
+  const fakeReviews =
+    apiReviews.length > 0
+      ? apiReviews.map((r) => ({
+          name: r.userName || r.user?.firstName || "Customer",
+          rating: r.rating,
+          date: new Date(r.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+          comment: r.comment || r.text || "",
+          helpful: r.helpfulCount || 0,
+        }))
+      : isServiceBased
+        ? [
+            { name: "John D.", rating: 5, date: "2 days ago", comment: "Excellent service! Very professional and relaxing experience. Highly recommended.", helpful: 12 },
+            { name: "Sarah M.", rating: 4, date: "1 week ago", comment: "Very good session. The therapist was skilled and attentive. Will definitely book again.", helpful: 8 },
+            { name: "Mike R.", rating: 5, date: "2 weeks ago", comment: "Amazing experience. Best service I've had. Worth every penny!", helpful: 15 },
+            { name: "Emily L.", rating: 5, date: "3 weeks ago", comment: "Love it! Perfect for relaxation. The ambiance was wonderful too.", helpful: 6 },
+          ]
+        : [
+            { name: "John D.", rating: 5, date: "2 days ago", comment: "Excellent product! Exactly as described. Fast shipping and great quality.", helpful: 12 },
+            { name: "Sarah M.", rating: 4, date: "1 week ago", comment: "Very good quality. Would recommend to others. Only minor issue was the packaging.", helpful: 8 },
+            { name: "Mike R.", rating: 5, date: "2 weeks ago", comment: "Amazing value for money. This exceeded my expectations in every way.", helpful: 15 },
+            { name: "Emily L.", rating: 5, date: "3 weeks ago", comment: "Love it! Perfect for what I needed. Will definitely buy again.", helpful: 6 },
+          ];
 
   return (
     <div className="bg-gray-50 min-h-screen">

@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router({ mergeParams: true });
-const { tenantController, productController, categoryController, orderController, cartController } = require("../controllers");
-const { authenticate, optionalAuth, storeAdminOnly, storeStaffOnly, requireTenant } = require("../middleware");
+const { tenantController, productController, categoryController, orderController, cartController, uploadController, reviewController, couponController, bookingController, contactController } = require("../controllers");
+const { authenticate, optionalAuth, storeAdminOnly, storeStaffOnly, requireTenant, upload, optimizeImage } = require("../middleware");
 const { productValidation, categoryValidation, orderValidation, cartValidation } = require("../middleware/validators");
 
 // All routes require tenant context
@@ -81,5 +81,82 @@ router.get("/orders/:id", authenticate, orderController.getOrderById);
 router.patch("/orders/:id/status", authenticate, storeStaffOnly, orderValidation.updateStatus, orderController.updateOrderStatus);
 router.patch("/orders/:id/tracking", authenticate, storeStaffOnly, orderController.addTracking);
 router.post("/orders/:id/refund", authenticate, storeAdminOnly, orderController.processRefund);
+
+/**
+ * File Upload Routes
+ */
+router.post("/upload/:type", authenticate, storeStaffOnly, upload.single("image"), optimizeImage, uploadController.uploadImage);
+router.post("/upload/:type/multiple", authenticate, storeStaffOnly, upload.array("images", 10), optimizeImage, uploadController.uploadMultipleImages);
+router.delete("/upload/:type/:filename", authenticate, storeStaffOnly, uploadController.deleteImage);
+
+/**
+ * Review Routes - Public
+ */
+router.get("/products/:productId/reviews", reviewController.getProductReviews);
+router.post("/products/:productId/reviews", authenticate, reviewController.createReview);
+router.patch("/reviews/:id", authenticate, reviewController.updateReview);
+router.delete("/reviews/:id", authenticate, reviewController.deleteReview);
+router.post("/reviews/:id/helpful", optionalAuth, reviewController.markHelpful);
+
+/**
+ * Review Routes - Admin
+ */
+router.get("/admin/reviews", authenticate, storeStaffOnly, reviewController.getAllReviews);
+router.patch("/admin/reviews/:id/status", authenticate, storeStaffOnly, reviewController.updateReviewStatus);
+
+/**
+ * Coupon Routes - Public
+ */
+router.get("/coupons/public", couponController.getPublicCoupons);
+router.post("/coupons/validate", optionalAuth, couponController.validateCoupon);
+
+/**
+ * Coupon Routes - Admin
+ */
+router.get("/admin/coupons", authenticate, storeStaffOnly, couponController.getCoupons);
+router.post("/admin/coupons", authenticate, storeAdminOnly, couponController.createCoupon);
+router.patch("/admin/coupons/:id", authenticate, storeAdminOnly, couponController.updateCoupon);
+router.delete("/admin/coupons/:id", authenticate, storeAdminOnly, couponController.deleteCoupon);
+
+/**
+ * Staff Routes - Public
+ */
+router.get("/staff", bookingController.getStaff);
+router.get("/staff/:id", bookingController.getStaffById);
+
+/**
+ * Staff Routes - Admin
+ */
+router.post("/staff", authenticate, storeAdminOnly, bookingController.createStaff);
+router.patch("/staff/:id", authenticate, storeAdminOnly, bookingController.updateStaff);
+router.delete("/staff/:id", authenticate, storeAdminOnly, bookingController.deleteStaff);
+
+/**
+ * Booking Routes - Public/Customer
+ */
+router.get("/bookings/availability", bookingController.getAvailability);
+router.post("/bookings", optionalAuth, bookingController.createBooking);
+router.get("/bookings/my-bookings", authenticate, bookingController.getMyBookings);
+router.post("/bookings/:id/cancel", authenticate, bookingController.cancelBooking);
+
+/**
+ * Booking Routes - Admin
+ */
+router.get("/admin/bookings", authenticate, storeStaffOnly, bookingController.getAllBookings);
+router.patch("/admin/bookings/:id/status", authenticate, storeStaffOnly, bookingController.updateBookingStatus);
+
+/**
+ * Contact Form Routes
+ */
+router.post("/contact", contactController.submitContactForm);
+router.get("/admin/contacts", authenticate, storeStaffOnly, contactController.getContactSubmissions);
+router.patch("/admin/contacts/:id", authenticate, storeStaffOnly, contactController.updateContactSubmission);
+
+/**
+ * Newsletter Routes
+ */
+router.post("/newsletter", contactController.subscribeNewsletter);
+router.post("/newsletter/unsubscribe", contactController.unsubscribeNewsletter);
+router.get("/admin/newsletter", authenticate, storeStaffOnly, contactController.getSubscribers);
 
 module.exports = router;

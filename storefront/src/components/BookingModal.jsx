@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useStore } from "../context/StoreContext";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import { X, Calendar, Clock, ChevronLeft, ChevronRight, Check, User, Users, Sparkles, AlertCircle, LogIn, PhoneCall } from "lucide-react";
+import { staffAPI, bookingAPI } from "../services/api";
+import { X, Calendar, Clock, ChevronLeft, ChevronRight, Check, User, Users, Sparkles, AlertCircle, LogIn, PhoneCall, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function BookingModal({ isOpen, onClose, service }) {
@@ -19,13 +20,18 @@ export default function BookingModal({ isOpen, onClose, service }) {
   const [guestCount, setGuestCount] = useState(1);
   const [notes, setNotes] = useState("");
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [staffMembers, setStaffMembers] = useState([{ id: "any", name: "Any Available", specialty: "Best available match" }]);
+  const [loadingStaff, setLoadingStaff] = useState(false);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [submittingBooking, setSubmittingBooking] = useState(false);
 
   const brandColors = {
     primary: store?.branding?.primaryColor || "#00897B",
     secondary: store?.branding?.secondaryColor || "#00695C",
   };
 
-  // Reset state when modal opens
+  // Reset state when modal opens and fetch staff
   useEffect(() => {
     if (isOpen) {
       setStep(1);
@@ -35,6 +41,29 @@ export default function BookingModal({ isOpen, onClose, service }) {
       setGuestCount(1);
       setNotes("");
       setCurrentMonth(new Date());
+      setAvailableSlots([]);
+
+      // Fetch real staff from API
+      setLoadingStaff(true);
+      staffAPI
+        .getAll()
+        .then((res) => {
+          const apiStaff = res.data?.data?.staff || [];
+          const staffList = [{ id: "any", name: "Any Available", specialty: "Best available match" }];
+          apiStaff.forEach((s) => {
+            staffList.push({
+              id: s._id,
+              name: s.name,
+              specialty: s.title || s.specialties?.join(", ") || "",
+              avatar: s.avatar || null,
+            });
+          });
+          setStaffMembers(staffList);
+        })
+        .catch(() => {
+          // Keep default "Any Available" on error
+        })
+        .finally(() => setLoadingStaff(false));
     }
   }, [isOpen]);
 
@@ -83,20 +112,44 @@ export default function BookingModal({ isOpen, onClose, service }) {
     return date >= today && date <= maxDate;
   };
 
-  // Generate available time slots based on booking settings
-  const generateTimeSlots = () => {
+  // Fetch available time slots from API when date changes
+  useEffect(() => {
+    if (!selectedDate || !service) return;
+    setLoadingSlots(true);
+    setSelectedTime(null);
+
+    const dateStr = selectedDate.toISOString().split("T")[0];
+    const staffId = selectedStaff !== "any" ? selectedStaff : undefined;
+    const duration = parseInt(service?.duration) || bookingSettings?.slotDuration || 60;
+
+    bookingAPI
+      .getAvailability({ date: dateStr, staffId, duration })
+      .then((res) => {
+        const slots = res.data?.data?.slots || res.data?.data?.availableSlots || [];
+        if (Array.isArray(slots) && slots.length > 0) {
+          setAvailableSlots(slots.map((s) => (typeof s === "string" ? { time: s, available: true } : s)));
+        } else {
+          // Fallback: generate slots locally from booking settings
+          setAvailableSlots(generateTimeSlotsLocal());
+        }
+      })
+      .catch(() => {
+        // Fallback: generate slots locally from booking settings
+        setAvailableSlots(generateTimeSlotsLocal());
+      })
+      .finally(() => setLoadingSlots(false));
+  }, [selectedDate, selectedStaff]);
+
+  // Fallback local time slot generation from booking settings (no random simulation)
+  const generateTimeSlotsLocal = () => {
     const slots = [];
     const duration = parseInt(service?.duration) || bookingSettings?.slotDuration || 60;
     const bufferTime = bookingSettings?.bufferTime || 0;
 
-    // Get day of week for selected date
     const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
     const selectedDayName = selectedDate ? dayNames[selectedDate.getDay()] : "monday";
-
-    // Get working hours for the selected day from booking settings
     const dayHours = bookingSettings?.workingHours?.[selectedDayName];
 
-    // Default business hours: 9 AM to 8 PM
     let startHour = 9;
     let endHour = 20;
 
@@ -106,19 +159,15 @@ export default function BookingModal({ isOpen, onClose, service }) {
       startHour = openH;
       endHour = closeH;
     } else if (dayHours && !dayHours.isOpen) {
-      // Closed day - return empty slots
       return slots;
     }
 
     for (let hour = startHour; hour < endHour; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
-        // Check if there's enough time before closing (including buffer)
         const totalMinutes = hour * 60 + minute + duration + bufferTime;
         if (totalMinutes <= endHour * 60) {
           const time = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
-          // Simulate some slots being unavailable
-          const isAvailable = Math.random() > 0.2; // 80% availability
-          slots.push({ time, available: isAvailable });
+          slots.push({ time, available: true });
         }
       }
     }
@@ -145,18 +194,10 @@ export default function BookingModal({ isOpen, onClose, service }) {
     });
   };
 
-  // Staff members (can be fetched from API in future)
-  const staffMembers = [
-    { id: "any", name: "Any Available", specialty: "Best available match" },
-    { id: "sarah", name: "Sarah Johnson", specialty: "Senior Therapist", avatar: "https://randomuser.me/api/portraits/women/44.jpg" },
-    { id: "michael", name: "Michael Chen", specialty: "Massage Specialist", avatar: "https://randomuser.me/api/portraits/men/32.jpg" },
-    { id: "emily", name: "Emily Williams", specialty: "Wellness Expert", avatar: "https://randomuser.me/api/portraits/women/68.jpg" },
-  ];
-
   const handleDateSelect = (date) => {
     if (isDateAvailable(date)) {
       setSelectedDate(date);
-      setSelectedTime(null); // Reset time when date changes
+      // Time slots will be fetched via useEffect
     }
   };
 
@@ -179,28 +220,68 @@ export default function BookingModal({ isOpen, onClose, service }) {
     completeBooking();
   };
 
-  const completeBooking = () => {
-    // Create booking item with date/time info
-    const bookingItem = {
-      productId: service._id || service.id,
-      name: service.name,
-      price: service.pricing?.salePrice || service.pricing?.basePrice || service.currentPrice || 0,
-      image: service.primaryImage || service.images?.[0]?.url,
-      quantity: guestCount,
-      bookingDetails: {
-        date: selectedDate.toISOString(),
+  const completeBooking = async () => {
+    setSubmittingBooking(true);
+    try {
+      // Submit booking via API
+      const bookingPayload = {
+        serviceId: service._id || service.id,
+        serviceName: service.name,
+        date: selectedDate.toISOString().split("T")[0],
         time: selectedTime,
-        staff: selectedStaff === "any" ? null : staffMembers.find((s) => s.id === selectedStaff),
+        staffId: selectedStaff !== "any" ? selectedStaff : undefined,
         notes: notes,
         guestCount: guestCount,
-      },
-    };
+        customerName: user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() : undefined,
+        customerEmail: user?.email,
+        customerPhone: user?.phone,
+      };
 
-    addItem(bookingItem);
-    onClose();
+      await bookingAPI.create(bookingPayload);
 
-    // Navigate directly to checkout with booking flow state
-    navigate("/checkout", { state: { fromBooking: true, serviceName: service.name } });
+      // Also add to cart for payment flow
+      const bookingItem = {
+        productId: service._id || service.id,
+        name: service.name,
+        price: service.pricing?.salePrice || service.pricing?.basePrice || service.currentPrice || 0,
+        image: service.primaryImage || service.images?.[0]?.url,
+        quantity: guestCount,
+        bookingDetails: {
+          date: selectedDate.toISOString(),
+          time: selectedTime,
+          staff: selectedStaff === "any" ? null : staffMembers.find((s) => s.id === selectedStaff),
+          notes: notes,
+          guestCount: guestCount,
+        },
+      };
+
+      addItem(bookingItem);
+      toast.success("Booking confirmed! Proceeding to checkout.");
+      onClose();
+      navigate("/checkout", { state: { fromBooking: true, serviceName: service.name } });
+    } catch (error) {
+      // If booking API fails, still add to cart as fallback
+      const bookingItem = {
+        productId: service._id || service.id,
+        name: service.name,
+        price: service.pricing?.salePrice || service.pricing?.basePrice || service.currentPrice || 0,
+        image: service.primaryImage || service.images?.[0]?.url,
+        quantity: guestCount,
+        bookingDetails: {
+          date: selectedDate.toISOString(),
+          time: selectedTime,
+          staff: selectedStaff === "any" ? null : staffMembers.find((s) => s.id === selectedStaff),
+          notes: notes,
+          guestCount: guestCount,
+        },
+      };
+
+      addItem(bookingItem);
+      onClose();
+      navigate("/checkout", { state: { fromBooking: true, serviceName: service.name } });
+    } finally {
+      setSubmittingBooking(false);
+    }
   };
 
   const navigateMonth = (direction) => {
@@ -209,7 +290,7 @@ export default function BookingModal({ isOpen, onClose, service }) {
     setCurrentMonth(newMonth);
   };
 
-  const timeSlots = selectedDate ? generateTimeSlots() : [];
+  const timeSlots = availableSlots;
   const calendarDays = generateCalendarDays();
   const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -362,47 +443,66 @@ export default function BookingModal({ isOpen, onClose, service }) {
                 {/* Time Slots */}
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-4">Available Time Slots</h3>
-                  <div className="grid grid-cols-4 gap-2">
-                    {timeSlots.map(({ time, available }) => (
-                      <button
-                        key={time}
-                        onClick={() => available && setSelectedTime(time)}
-                        disabled={!available}
-                        className={`
+                  {loadingSlots ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                      <span className="ml-2 text-gray-500">Checking availability...</span>
+                    </div>
+                  ) : timeSlots.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <Clock className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                      <p>No available slots for this date</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-4 gap-2">
+                      {timeSlots.map(({ time, available }) => (
+                        <button
+                          key={time}
+                          onClick={() => available && setSelectedTime(time)}
+                          disabled={!available}
+                          className={`
                           py-3 px-2 text-sm rounded-lg font-medium transition-all
                           ${selectedTime === time ? "text-white" : ""}
                           ${available && selectedTime !== time ? "bg-gray-100 hover:bg-gray-200 text-gray-700" : ""}
                           ${!available ? "bg-gray-50 text-gray-300 cursor-not-allowed line-through" : ""}
                         `}
-                        style={selectedTime === time ? { backgroundColor: brandColors.primary } : {}}
-                      >
-                        {formatTime(time)}
-                      </button>
-                    ))}
-                  </div>
+                          style={selectedTime === time ? { backgroundColor: brandColors.primary } : {}}
+                        >
+                          {formatTime(time)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Staff Selection */}
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-4">Select Therapist (Optional)</h3>
-                  <div className="space-y-2">
-                    {staffMembers.map((staff) => (
-                      <button key={staff.id} onClick={() => setSelectedStaff(staff.id)} className={`w-full flex items-center space-x-4 p-4 rounded-xl border-2 transition-all ${selectedStaff === staff.id ? "border-green-500 bg-green-50" : "border-gray-100 hover:border-gray-200 bg-white"}`}>
-                        {staff.avatar ? (
-                          <img src={staff.avatar} alt={staff.name} className="w-12 h-12 rounded-full object-cover" />
-                        ) : (
-                          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-                            <Users className="w-6 h-6 text-gray-400" />
+                  {loadingStaff ? (
+                    <div className="flex items-center justify-center py-6">
+                      <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+                      <span className="ml-2 text-gray-500">Loading team...</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {staffMembers.map((staff) => (
+                        <button key={staff.id} onClick={() => setSelectedStaff(staff.id)} className={`w-full flex items-center space-x-4 p-4 rounded-xl border-2 transition-all ${selectedStaff === staff.id ? "border-green-500 bg-green-50" : "border-gray-100 hover:border-gray-200 bg-white"}`}>
+                          {staff.avatar ? (
+                            <img src={staff.avatar} alt={staff.name} className="w-12 h-12 rounded-full object-cover" />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+                              <Users className="w-6 h-6 text-gray-400" />
+                            </div>
+                          )}
+                          <div className="flex-1 text-left">
+                            <p className="font-medium text-gray-900">{staff.name}</p>
+                            <p className="text-sm text-gray-500">{staff.specialty}</p>
                           </div>
-                        )}
-                        <div className="flex-1 text-left">
-                          <p className="font-medium text-gray-900">{staff.name}</p>
-                          <p className="text-sm text-gray-500">{staff.specialty}</p>
-                        </div>
-                        {selectedStaff === staff.id && <Check className="w-5 h-5 text-green-600" />}
-                      </button>
-                    ))}
-                  </div>
+                          {selectedStaff === staff.id && <Check className="w-5 h-5 text-green-600" />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -532,8 +632,13 @@ export default function BookingModal({ isOpen, onClose, service }) {
                 Continue
               </button>
             ) : (
-              <button onClick={handleConfirmBooking} className="w-full py-4 rounded-xl font-semibold text-white transition-all hover:opacity-90 flex items-center justify-center space-x-2" style={{ backgroundColor: brandColors.primary }}>
-                {isAuthenticated ? (
+              <button onClick={handleConfirmBooking} disabled={submittingBooking} className="w-full py-4 rounded-xl font-semibold text-white transition-all hover:opacity-90 flex items-center justify-center space-x-2 disabled:opacity-50" style={{ backgroundColor: brandColors.primary }}>
+                {submittingBooking ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Confirming...</span>
+                  </>
+                ) : isAuthenticated ? (
                   <>
                     <Calendar className="w-5 h-5" />
                     <span>Confirm Booking</span>

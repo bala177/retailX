@@ -5,15 +5,15 @@ import { productsAPI, categoriesAPI } from "../services/api";
 import ProductCard from "../components/ProductCard";
 import ContactSection from "../components/ContactSection";
 import { ArrowRight, Truck, Shield, RefreshCw, Headphones, ChevronRight, Star, TrendingUp, Sparkles, Tag, Clock, Award, Heart, Zap, Gift, ShoppingBag, Play, Percent, Calendar, BadgeCheck, Sparkle, ThumbsUp } from "lucide-react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
 // Resolve image URL - handles both absolute URLs and relative upload paths
 const resolveImageUrl = (url) => {
   if (!url) return null;
-  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
   // For relative paths like /uploads/heroes/..., prepend the API origin
-  const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
-  const origin = apiBase.replace(/\/api\/v1$/, '');
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
+  const origin = apiBase.replace(/\/api\/v1$/, "");
   return `${origin}${url}`;
 };
 
@@ -146,7 +146,7 @@ export default function Home() {
 
   // Get category image based on slug or name
   const getCategoryImage = (category) => {
-    if (category.image) return category.image;
+    if (category.image) return resolveImageUrl(category.image);
     const slug = (category.slug || category.name || "").toLowerCase();
     for (const [key, url] of Object.entries(categoryImages)) {
       if (slug.includes(key)) return url;
@@ -424,24 +424,29 @@ export default function Home() {
                     </Link>
                   </div>
 
-                  {/* Stats */}
+                  {/* Stats - Dynamic from store aboutContent or defaults */}
                   <div className="mt-10 flex items-center gap-8">
-                    <div>
-                      <p className="text-3xl font-bold">500+</p>
-                      <p className="text-white/60 text-sm">Products</p>
-                    </div>
-                    <div className="w-px h-12 bg-white/20" />
-                    <div>
-                      <p className="text-3xl font-bold">50k+</p>
-                      <p className="text-white/60 text-sm">Happy Customers</p>
-                    </div>
-                    <div className="w-px h-12 bg-white/20" />
-                    <div>
-                      <p className="text-3xl font-bold">4.9</p>
-                      <p className="text-white/60 text-sm flex items-center">
-                        Rating <Star className="w-3 h-3 ml-1 fill-yellow-400 text-yellow-400" />
-                      </p>
-                    </div>
+                    {(store?.aboutContent?.stats && store.aboutContent.stats.length > 0
+                      ? store.aboutContent.stats.slice(0, 3).map((stat, i) => ({
+                          value: stat.value,
+                          label: stat.label,
+                        }))
+                      : [
+                          { value: "500+", label: "Products" },
+                          { value: "50k+", label: "Happy Customers" },
+                          { value: "4.9", label: "Rating" },
+                        ]
+                    ).map((stat, i) => (
+                      <React.Fragment key={i}>
+                        {i > 0 && <div className="w-px h-12 bg-white/20" />}
+                        <div>
+                          <p className="text-3xl font-bold">{stat.value}</p>
+                          <p className="text-white/60 text-sm flex items-center">
+                            {stat.label} {stat.label.toLowerCase().includes("rating") && <Star className="w-3 h-3 ml-1 fill-yellow-400 text-yellow-400" />}
+                          </p>
+                        </div>
+                      </React.Fragment>
+                    ))}
                   </div>
                 </div>
 

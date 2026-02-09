@@ -68,6 +68,20 @@ export const TenantProvider = ({ children }) => {
     setCurrentTenant(tenant);
   };
 
+  const refreshTenant = async () => {
+    if (currentTenant) {
+      try {
+        const response = await tenantAPI.getById(currentTenant._id);
+        const updated = response.data.data.tenant;
+        setCurrentTenant(updated);
+        setTenants((prev) => prev.map((t) => (t._id === updated._id ? updated : t)));
+        localStorage.setItem("currentTenant", JSON.stringify(updated));
+      } catch (error) {
+        console.error("Failed to refresh tenant:", error);
+      }
+    }
+  };
+
   const value = {
     tenants,
     currentTenant,
@@ -75,6 +89,7 @@ export const TenantProvider = ({ children }) => {
     switchTenant,
     storeAPI,
     refreshTenants: loadTenants,
+    refreshTenant,
   };
 
   return <TenantContext.Provider value={value}>{children}</TenantContext.Provider>;

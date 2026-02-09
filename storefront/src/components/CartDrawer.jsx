@@ -12,9 +12,10 @@ export default function CartDrawer() {
     secondary: store?.branding?.secondaryColor || "#4f46e5",
   };
 
-  // Calculate free shipping threshold (not relevant for services)
-  const freeShippingThreshold = 50;
+  // Dynamic free shipping threshold from store settings
+  const freeShippingThreshold = store?.shipping?.freeShippingThreshold || store?.settings?.freeShippingThreshold || 50;
   const remainingForFreeShipping = Math.max(0, freeShippingThreshold - subtotal);
+  const currencySymbol = store?.settings?.currencySymbol || "$";
 
   if (!isOpen) return null;
 
@@ -185,12 +186,16 @@ export default function CartDrawer() {
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm text-gray-500">
                 <span>Subtotal ({itemCount} items)</span>
-                <span className="text-gray-900 font-medium">${subtotal.toFixed(2)}</span>
+                <span className="text-gray-900 font-medium">
+                  {currencySymbol}
+                  {subtotal.toFixed(2)}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-lg font-bold text-gray-900">Estimated Total</span>
                 <span className="text-xl font-bold" style={{ color: brandColors.primary }}>
-                  ${subtotal.toFixed(2)}
+                  {currencySymbol}
+                  {subtotal.toFixed(2)}
                 </span>
               </div>
               <p className="text-xs text-gray-500 flex items-center">

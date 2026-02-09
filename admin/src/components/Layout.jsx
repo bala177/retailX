@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTenant } from "../context/TenantContext";
-import { LayoutDashboard, Package, FolderTree, ShoppingCart, Users, Settings, LogOut, Menu, X, ChevronDown, Store, Bell, Search, Shield, Building2, UserCog, User } from "lucide-react";
+import { LayoutDashboard, Package, FolderTree, ShoppingCart, Users, Settings, LogOut, Menu, X, ChevronDown, Store, Bell, Search, Shield, Building2, UserCog, User, Star, Tag, Calendar, Users2, Inbox } from "lucide-react";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -10,6 +10,11 @@ const navigation = [
   { name: "Categories", href: "/categories", icon: FolderTree },
   { name: "Orders", href: "/orders", icon: ShoppingCart },
   { name: "Customers", href: "/customers", icon: Users },
+  { name: "Reviews", href: "/reviews", icon: Star },
+  { name: "Coupons", href: "/coupons", icon: Tag },
+  { name: "Bookings", href: "/bookings", icon: Calendar },
+  { name: "Staff", href: "/staff", icon: Users2 },
+  { name: "Messages", href: "/messages", icon: Inbox },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 

@@ -4,7 +4,7 @@ import { useCart } from "../context/CartContext";
 import { useStore } from "../context/StoreContext";
 import { useAuth } from "../context/AuthContext";
 import { useMutation } from "@tanstack/react-query";
-import api from "../services/api";
+import api, { couponAPI } from "../services/api";
 import toast from "react-hot-toast";
 import { ArrowLeft, CreditCard, Truck, Shield, Loader2, Check, User, MapPin, Phone, Mail, Lock, Package, Clock, ChevronRight, Tag, Gift, AlertCircle, Store, Calendar, BadgeCheck, Sparkles, LogIn, Home, PhoneCall, MessageCircle } from "lucide-react";
 
@@ -18,6 +18,8 @@ export default function Checkout() {
   const [shippingMethod, setShippingMethod] = useState("standard");
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoLabel, setPromoLabel] = useState("");
 
   // Check if coming from direct booking flow
   const fromBooking = location.state?.fromBooking || false;
@@ -81,26 +83,62 @@ export default function Checkout() {
   };
 
   // Shipping options
-  const shippingOptions = [
-    { id: "standard", name: "Standard Shipping", price: subtotal >= 50 ? 0 : 9.99, time: "5-7 business days", icon: Truck },
-    { id: "express", name: "Express Shipping", price: 14.99, time: "2-3 business days", icon: Package },
-    { id: "overnight", name: "Overnight Shipping", price: 29.99, time: "Next business day", icon: Clock },
-  ];
+  // Dynamic shipping options from store settings
+  const freeShippingThreshold = store?.shipping?.freeShippingThreshold || 50;
+  const storeShippingMethods = store?.shipping?.methods;
+  const currencySymbol = store?.settings?.currencySymbol || "$";
 
-  const selectedShipping = shippingOptions.find((s) => s.id === shippingMethod);
-  const discount = promoApplied ? subtotal * 0.2 : 0;
+  const shippingOptions =
+    storeShippingMethods && storeShippingMethods.length > 0
+      ? storeShippingMethods.map((m) => ({
+          id: m.id || m.name?.toLowerCase().replace(/\s+/g, "-") || "standard",
+          name: m.name,
+          price: m.name?.toLowerCase().includes("free") || m.price === 0 ? 0 : subtotal >= freeShippingThreshold && m.id === "standard" ? 0 : m.price || 0,
+          time: m.estimatedDays || m.time || "5-7 business days",
+          icon: m.name?.toLowerCase().includes("overnight") ? Clock : m.name?.toLowerCase().includes("express") ? Package : Truck,
+        }))
+      : [
+          { id: "standard", name: "Standard Shipping", price: subtotal >= freeShippingThreshold ? 0 : 9.99, time: "5-7 business days", icon: Truck },
+          { id: "express", name: "Express Shipping", price: 14.99, time: "2-3 business days", icon: Package },
+          { id: "overnight", name: "Overnight Shipping", price: 29.99, time: "Next business day", icon: Clock },
+        ];
+
+  const selectedShipping = shippingOptions.find((s) => s.id === shippingMethod) || shippingOptions[0];
+  const discount = promoApplied ? promoDiscount : 0;
   const afterDiscount = subtotal - discount;
   const shippingCost = isServiceBased ? 0 : selectedShipping?.price || 0;
-  const tax = afterDiscount * 0.08;
+  // Dynamic tax rate from store settings (default 8%)
+  const taxRate = store?.settings?.taxRate != null ? store.settings.taxRate / 100 : 0.08;
+  const tax = afterDiscount * taxRate;
   const total = afterDiscount + shippingCost + tax;
 
-  // Apply promo code
-  const applyPromo = () => {
-    if (promoCode.toUpperCase() === "WELCOME20") {
-      setPromoApplied(true);
-      toast.success("Promo code applied! 20% off your order.");
-    } else {
-      toast.error("Invalid promo code");
+  // Apply promo code via API
+  const applyPromo = async () => {
+    if (!promoCode.trim()) {
+      toast.error("Please enter a promo code");
+      return;
+    }
+    try {
+      const res = await couponAPI.validate(promoCode.trim(), subtotal);
+      const couponData = res.data?.data;
+      if (couponData) {
+        const discountAmount = couponData.discountAmount || (couponData.discountType === "percentage" ? subtotal * (couponData.discountValue / 100) : couponData.discountValue) || 0;
+        setPromoDiscount(discountAmount);
+        setPromoLabel(couponData.discountType === "percentage" ? `${couponData.discountValue}%` : `${currencySymbol}${couponData.discountValue}`);
+        setPromoApplied(true);
+        toast.success(`Promo code applied! ${currencySymbol}${discountAmount.toFixed(2)} off`);
+      }
+    } catch (error) {
+      // Fallback: try hardcoded WELCOME20
+      if (promoCode.toUpperCase() === "WELCOME20") {
+        const d = subtotal * 0.2;
+        setPromoDiscount(d);
+        setPromoLabel("20%");
+        setPromoApplied(true);
+        toast.success("Promo code applied! 20% off your order.");
+      } else {
+        toast.error(error.response?.data?.message || "Invalid promo code");
+      }
     }
   };
 
@@ -942,7 +980,7 @@ export default function Checkout() {
                 {promoApplied && (
                   <p className="text-sm text-green-600 mt-2 flex items-center">
                     <Check className="w-4 h-4 mr-1" />
-                    WELCOME20 applied!
+                    {promoCode.toUpperCase()} applied! ({promoLabel} off)
                   </p>
                 )}
               </div>
@@ -957,7 +995,7 @@ export default function Checkout() {
                   <div className="flex justify-between text-sm">
                     <span className="text-green-600 flex items-center">
                       <Tag className="w-4 h-4 mr-1" />
-                      Discount (20%)
+                      Discount ({promoLabel})
                     </span>
                     <span className="text-green-600 font-medium">-${discount.toFixed(2)}</span>
                   </div>

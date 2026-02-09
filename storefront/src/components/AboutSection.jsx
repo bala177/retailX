@@ -2,6 +2,8 @@ import { useStore } from "../context/StoreContext";
 import { Award, Heart, Users, Clock, Target, Sparkles, CheckCircle, ArrowRight, Footprints } from "lucide-react";
 import { Link } from "react-router-dom";
 
+const iconMap = { Award, Heart, Users, Clock, Target, Sparkles, CheckCircle, Footprints };
+
 export default function AboutSection() {
   const { store } = useStore();
 
@@ -10,7 +12,10 @@ export default function AboutSection() {
     secondary: store?.branding?.secondaryColor || "#4f46e5",
   };
 
-  // Store-specific content
+  // Check if store has custom about content
+  const hasCustomContent = store?.aboutContent && (store.aboutContent.headline || store.aboutContent.description || store.aboutContent.story);
+
+  // Store-specific content fallback
   const getStoreType = () => {
     const slug = store?.slug || "";
     if (slug.includes("hair") || slug.includes("salon") || slug.includes("glamour")) return "hairsalon";
@@ -21,13 +26,13 @@ export default function AboutSection() {
 
   const storeType = getStoreType();
 
-  const aboutContent = {
+  // Default content per store type (fallback when no custom content set)
+  const defaultContent = {
     hairsalon: {
       headline: "Where Artistry Meets Style",
       subheadline: "Transforming hair, transforming confidence",
-      description: "Welcome to our award-winning hair studio, where every visit is an experience tailored to you. Our team of master stylists combines technical expertise with artistic vision to create looks that enhance your natural beauty and fit your lifestyle.",
-      story:
-        "Founded with a passion for hair artistry, we've grown from a small salon to a premier destination for those seeking exceptional hair care. Our philosophy is simple: listen, understand, and create. Whether you're looking for a subtle change or a complete transformation, we're here to make it happen.",
+      description: "Welcome to our award-winning hair studio, where every visit is an experience tailored to you.",
+      story: "Founded with a passion for hair artistry, we've grown from a small salon to a premier destination for those seeking exceptional hair care.",
       image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800",
       secondaryImage: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=600",
       values: [
@@ -47,9 +52,8 @@ export default function AboutSection() {
     spa: {
       headline: "Your Sanctuary of Serenity",
       subheadline: "Where relaxation meets rejuvenation",
-      description: "Step into our tranquil oasis and leave the stresses of daily life behind. Our spa offers a complete wellness experience, combining ancient healing traditions with modern therapeutic techniques to restore your body, mind, and spirit.",
-      story:
-        "Born from a deep appreciation for holistic wellness, our spa was created to be more than just a place for treatments – it's a sanctuary for transformation. Every detail, from our calming ambiance to our carefully curated treatments, is designed to guide you on a journey to total relaxation.",
+      description: "Step into our tranquil oasis and leave the stresses of daily life behind.",
+      story: "Born from a deep appreciation for holistic wellness, our spa was created to be more than just a place for treatments.",
       image: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800",
       secondaryImage: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600",
       values: [
@@ -69,8 +73,8 @@ export default function AboutSection() {
     podologie: {
       headline: "Expert Foot Care You Can Trust",
       subheadline: "Where medical expertise meets compassionate care",
-      description: "Our clinic combines medical-grade foot care with a welcoming, comfortable environment. Led by certified podiatrists and experienced specialists, we provide comprehensive solutions for all your foot health needs.",
-      story: "We believe healthy feet are the foundation of an active, fulfilling life. That's why we've assembled a team of dedicated professionals who specialize in everything from preventive care to complex treatments. Our mission is to keep you moving comfortably.",
+      description: "Our clinic combines medical-grade foot care with a welcoming, comfortable environment.",
+      story: "We believe healthy feet are the foundation of an active, fulfilling life.",
       image: "https://images.unsplash.com/photo-1519824145371-296894a0daa9?w=800",
       secondaryImage: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=600",
       values: [
@@ -89,7 +93,21 @@ export default function AboutSection() {
     },
   };
 
-  const content = aboutContent[storeType] || aboutContent.spa;
+  const fallback = defaultContent[storeType] || defaultContent.spa;
+
+  // Build content: prefer custom from DB, fallback to defaults
+  const aboutData = store?.aboutContent || {};
+  const content = {
+    headline: aboutData.headline || fallback.headline,
+    subheadline: aboutData.description || fallback.subheadline,
+    description: aboutData.description || fallback.description,
+    story: aboutData.story || fallback.story,
+    image: aboutData.images?.[0] || fallback.image,
+    secondaryImage: aboutData.images?.[1] || fallback.secondaryImage,
+    values: aboutData.values?.length > 0 ? aboutData.values.map((v) => ({ icon: Heart, title: v.title, desc: v.description, emoji: v.icon })) : fallback.values,
+    stats: aboutData.stats?.length > 0 ? aboutData.stats : fallback.stats,
+    features: aboutData.features?.length > 0 ? aboutData.features : fallback.features,
+  };
 
   return (
     <section className="py-20 bg-white overflow-hidden">
@@ -169,10 +187,10 @@ export default function AboutSection() {
             {content.values.map((value, index) => (
               <div key={index} className="group text-center p-6 rounded-2xl bg-gray-50 hover:bg-white hover:shadow-xl transition-all duration-300">
                 <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4 transition-colors" style={{ backgroundColor: `${brandColors.primary}15` }}>
-                  <value.icon className="w-8 h-8" style={{ color: brandColors.primary }} />
+                  {value.emoji ? <span className="text-2xl">{value.emoji}</span> : value.icon ? <value.icon className="w-8 h-8" style={{ color: brandColors.primary }} /> : <Heart className="w-8 h-8" style={{ color: brandColors.primary }} />}
                 </div>
                 <h4 className="font-bold text-gray-900 mb-2">{value.title}</h4>
-                <p className="text-sm text-gray-600">{value.desc}</p>
+                <p className="text-sm text-gray-600">{value.desc || value.description}</p>
               </div>
             ))}
           </div>

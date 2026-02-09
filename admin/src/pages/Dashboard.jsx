@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTenant } from "../context/TenantContext";
-import { Package, ShoppingCart, Users, DollarSign, TrendingUp, TrendingDown, ArrowRight, Eye } from "lucide-react";
+import { Package, ShoppingCart, Users, DollarSign, ArrowRight, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Dashboard() {
@@ -26,32 +26,24 @@ export default function Dashboard() {
       value: currentTenant?.stats?.totalProducts || 0,
       icon: Package,
       color: "bg-blue-500",
-      change: "+12%",
-      trend: "up",
     },
     {
       name: "Total Orders",
       value: currentTenant?.stats?.totalOrders || 0,
       icon: ShoppingCart,
       color: "bg-green-500",
-      change: "+8%",
-      trend: "up",
     },
     {
       name: "Total Customers",
       value: currentTenant?.stats?.totalCustomers || 0,
       icon: Users,
       color: "bg-purple-500",
-      change: "+15%",
-      trend: "up",
     },
     {
       name: "Total Revenue",
       value: `$${(currentTenant?.stats?.totalRevenue || 0).toLocaleString()}`,
       icon: DollarSign,
       color: "bg-orange-500",
-      change: "+23%",
-      trend: "up",
     },
   ];
 
@@ -78,11 +70,6 @@ export default function Dashboard() {
               <div className={`${stat.color} p-3 rounded-lg`}>
                 <stat.icon className="w-6 h-6 text-white" />
               </div>
-            </div>
-            <div className="flex items-center mt-4 text-sm">
-              {stat.trend === "up" ? <TrendingUp className="w-4 h-4 text-green-500 mr-1" /> : <TrendingDown className="w-4 h-4 text-red-500 mr-1" />}
-              <span className={stat.trend === "up" ? "text-green-600" : "text-red-600"}>{stat.change}</span>
-              <span className="text-gray-500 ml-1">from last month</span>
             </div>
           </div>
         ))}

@@ -15,10 +15,10 @@ import { useState, useEffect } from "react";
 // Resolve image URL - handles both absolute URLs and relative upload paths
 const resolveImageUrl = (url) => {
   if (!url) return null;
-  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
   // For relative paths like /uploads/heroes/..., prepend the API origin
-  const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
-  const origin = apiBase.replace(/\/api\/v1$/, '');
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
+  const origin = apiBase.replace(/\/api\/v1$/, "");
   return `${origin}${url}`;
 };
 
@@ -102,12 +102,20 @@ export default function ServiceHome() {
   }
 
   // Stats/achievements
-  const stats = [
-    { value: "12+", label: "Years Experience" },
-    { value: "10,000+", label: "Happy Clients" },
-    { value: "4.9", label: "Average Rating", icon: Star },
-    { value: "50+", label: "Expert Staff" },
-  ];
+  // Dynamic stats from store.aboutContent or defaults
+  const stats =
+    store?.aboutContent?.stats && store.aboutContent.stats.length > 0
+      ? store.aboutContent.stats.slice(0, 4).map((s) => ({
+          value: s.value,
+          label: s.label,
+          icon: s.label.toLowerCase().includes("rating") ? Star : undefined,
+        }))
+      : [
+          { value: "12+", label: "Years Experience" },
+          { value: "10,000+", label: "Happy Clients" },
+          { value: "4.9", label: "Average Rating", icon: Star },
+          { value: "50+", label: "Expert Staff" },
+        ];
 
   // Why choose us content
   const whyChooseUs = {
@@ -131,7 +139,18 @@ export default function ServiceHome() {
     ],
   };
 
-  const features = whyChooseUs[serviceType] || whyChooseUs.spa;
+  // Dynamic features from store.aboutContent.features or type-based defaults
+  const iconMap = { BadgeCheck, Heart, Sparkles, Gift, Award, Users, CheckCircle };
+  const storeFeatures =
+    store?.aboutContent?.features && store.aboutContent.features.length > 0
+      ? store.aboutContent.features.map((f) => ({
+          icon: iconMap[f.icon] || Sparkles,
+          title: f.title,
+          desc: f.description || f.desc || "",
+        }))
+      : whyChooseUs[serviceType] || whyChooseUs.spa;
+
+  const features = storeFeatures;
 
   return (
     <div className="min-h-screen bg-white">

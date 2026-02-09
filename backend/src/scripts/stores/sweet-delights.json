@@ -1,0 +1,30 @@
+{
+  "store": {
+    "name": "Sweet Delights Bakery",
+    "slug": "sweet-delights",
+    "description": "Artisan cakes, pastries & desserts baked fresh daily",
+    "industry": "bakery"
+  },
+  "owner": {
+    "firstName": "Sophie",
+    "lastName": "Baker",
+    "email": "owner@sweetdelights.com"
+  },
+  "contact": {
+    "email": "hello@sweetdelights.com",
+    "phone": "+1 (555) 789-0123",
+    "address": {
+      "street": "789 Baker Street",
+      "city": "New York",
+      "state": "NY",
+      "zipCode": "10001",
+      "country": "US"
+    }
+  },
+  "colors": {
+    "primary": "#FF6B9D",
+    "secondary": "#C44569",
+    "accent": "#FFC75F"
+  },
+  "useTemplateProducts": true
+}

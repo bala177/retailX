@@ -97,6 +97,34 @@ export const customerAuthAPI = {
 export const reviewsAPI = {
   getByProduct: (productId) => api.get(`/store/reviews/product/${productId}`),
   create: (data) => api.post("/store/reviews", data),
+  markHelpful: (id) => api.post(`/store/reviews/${id}/helpful`),
+};
+
+// Contact & Newsletter API
+export const contactAPI = {
+  submit: (data) => api.post("/store/contact", data),
+  subscribeNewsletter: (email) => api.post("/store/newsletter/subscribe", { email }),
+  unsubscribeNewsletter: (email) => api.post("/store/newsletter/unsubscribe", { email }),
+};
+
+// Staff API
+export const staffAPI = {
+  getAll: () => api.get("/store/staff"),
+  getById: (id) => api.get(`/store/staff/${id}`),
+};
+
+// Booking API
+export const bookingAPI = {
+  getAvailability: (params) => api.get("/store/bookings/availability", { params }),
+  create: (data) => api.post("/store/bookings", data),
+  getMyBookings: () => api.get("/store/bookings/my"),
+  cancel: (id) => api.patch(`/store/bookings/${id}/cancel`),
+};
+
+// Coupon API
+export const couponAPI = {
+  validate: (code, orderAmount) => api.post("/store/coupons/validate", { code, orderAmount }),
+  getPublic: () => api.get("/store/coupons"),
 };
 
 export default api;

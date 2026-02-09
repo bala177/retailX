@@ -5,7 +5,7 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { ShoppingBag, Search, Menu, X, User, Heart, ChevronDown, Store, Phone, Mail, MapPin, Facebook, Twitter, Instagram, Youtube, CreditCard, Truck, Shield, Clock, ChevronRight, Tag, Calendar, LogIn, LogOut, Settings } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { categoriesAPI } from "../services/api";
+import { categoriesAPI, contactAPI } from "../services/api";
 import CartDrawer from "./CartDrawer";
 import ScrollToTop from "./ScrollToTop";
 
@@ -23,6 +23,8 @@ export default function Layout() {
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterLoading, setNewsletterLoading] = useState(false);
 
   // Track scroll for header styling and active section detection
   useEffect(() => {
@@ -148,42 +150,69 @@ export default function Layout() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* Top Banner with Store Switcher & RetailX Branding */}
-      <div className="text-white text-center py-2 text-sm font-medium" style={{ background: `linear-gradient(135deg, ${brandColors.primary}, ${brandColors.secondary})` }}>
-        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
-          <Link to="/select-store" className="flex items-center space-x-2 hover:bg-white/20 px-3 py-1.5 rounded-full transition-colors group">
-            <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
-              <Store className="w-3.5 h-3.5" />
+      {store?.promoBanner?.enabled ? (
+        <div className="text-center py-2 text-sm font-medium" style={{ backgroundColor: store.promoBanner.backgroundColor || brandColors.primary, color: store.promoBanner.textColor || "#FFFFFF" }}>
+          <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
+            <Link to="/select-store" className="flex items-center space-x-2 hover:opacity-80 px-3 py-1.5 rounded-full transition-colors group">
+              <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
+                <Store className="w-3.5 h-3.5" />
+              </div>
+              <span className="hidden sm:inline font-semibold">RetailX</span>
+              <ChevronRight className="w-4 h-4 opacity-60 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <div className="flex items-center space-x-2">
+              {store.promoBanner.link ? (
+                <a href={store.promoBanner.link} className="hover:underline">
+                  {store.promoBanner.text}
+                </a>
+              ) : (
+                <span>{store.promoBanner.text}</span>
+              )}
             </div>
-            <span className="hidden sm:inline font-semibold">RetailX</span>
-            <ChevronRight className="w-4 h-4 opacity-60 group-hover:translate-x-0.5 transition-transform" />
-          </Link>
-          <div className="flex items-center space-x-2">
-            {isServiceBased ? (
-              <>
-                <Calendar className="w-4 h-4" />
-                <span className="hidden sm:inline">
-                  Book online & get <strong>10% OFF</strong> your first appointment!
-                </span>
-                <span className="sm:hidden">10% OFF first booking!</span>
-              </>
-            ) : (
-              <>
-                <Truck className="w-4 h-4" />
-                <span className="hidden sm:inline">
-                  Free shipping on orders over $50! Use code <strong>WELCOME20</strong> for 20% off
-                </span>
-                <span className="sm:hidden">Free shipping over $50!</span>
-              </>
-            )}
+            <Link to="/select-store" className="flex items-center space-x-2 hover:opacity-80 px-3 py-1.5 rounded-full transition-colors">
+              <span className="text-xs font-medium">{store?.name || "Select Store"}</span>
+              <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
+                <ChevronDown className="w-3 h-3" />
+              </div>
+            </Link>
           </div>
-          <Link to="/select-store" className="flex items-center space-x-2 hover:bg-white/20 px-3 py-1.5 rounded-full transition-colors">
-            <span className="text-xs font-medium">{store?.name || "Select Store"}</span>
-            <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
-              <ChevronDown className="w-3 h-3" />
-            </div>
-          </Link>
         </div>
-      </div>
+      ) : (
+        <div className="text-white text-center py-2 text-sm font-medium" style={{ background: `linear-gradient(135deg, ${brandColors.primary}, ${brandColors.secondary})` }}>
+          <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
+            <Link to="/select-store" className="flex items-center space-x-2 hover:bg-white/20 px-3 py-1.5 rounded-full transition-colors group">
+              <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
+                <Store className="w-3.5 h-3.5" />
+              </div>
+              <span className="hidden sm:inline font-semibold">RetailX</span>
+              <ChevronRight className="w-4 h-4 opacity-60 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <div className="flex items-center space-x-2">
+              {isServiceBased ? (
+                <>
+                  <Calendar className="w-4 h-4" />
+                  <span className="hidden sm:inline">
+                    Book online & get <strong>10% OFF</strong> your first appointment!
+                  </span>
+                  <span className="sm:hidden">10% OFF first booking!</span>
+                </>
+              ) : (
+                <>
+                  <Truck className="w-4 h-4" />
+                  <span className="hidden sm:inline">Free shipping on orders over $50!</span>
+                  <span className="sm:hidden">Free shipping over $50!</span>
+                </>
+              )}
+            </div>
+            <Link to="/select-store" className="flex items-center space-x-2 hover:bg-white/20 px-3 py-1.5 rounded-full transition-colors">
+              <span className="text-xs font-medium">{store?.name || "Select Store"}</span>
+              <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
+                <ChevronDown className="w-3 h-3" />
+              </div>
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <header className={`bg-white sticky top-0 z-40 transition-all duration-300 ${scrolled ? "shadow-lg" : "border-b border-gray-100"}`}>
@@ -192,16 +221,16 @@ export default function Layout() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-10 text-sm">
               <div className="flex items-center space-x-6 text-gray-500">
-                {store?.contactPhone && (
-                  <a href={`tel:${store.contactPhone}`} className="flex items-center space-x-1 hover:text-gray-700">
+                {(store?.contact?.phone || store?.contactPhone) && (
+                  <a href={`tel:${store?.contact?.phone || store?.contactPhone}`} className="flex items-center space-x-1 hover:text-gray-700">
                     <Phone className="w-3.5 h-3.5" />
-                    <span>{store.contactPhone}</span>
+                    <span>{store?.contact?.phone || store?.contactPhone}</span>
                   </a>
                 )}
-                {store?.contactEmail && (
-                  <a href={`mailto:${store.contactEmail}`} className="flex items-center space-x-1 hover:text-gray-700">
+                {(store?.contact?.email || store?.contactEmail) && (
+                  <a href={`mailto:${store?.contact?.email || store?.contactEmail}`} className="flex items-center space-x-1 hover:text-gray-700">
                     <Mail className="w-3.5 h-3.5" />
-                    <span>{store.contactEmail}</span>
+                    <span>{store?.contact?.email || store?.contactEmail}</span>
                   </a>
                 )}
               </div>
@@ -237,8 +266,18 @@ export default function Layout() {
 
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-3 flex-shrink-0">
-              {store?.logo ? (
-                <img src={store.logo} alt={store?.name} className="h-10 lg:h-12 w-auto" />
+              {store?.branding?.logo || store?.logo ? (
+                <img
+                  src={(() => {
+                    const url = store.branding?.logo || store.logo;
+                    if (!url) return url;
+                    if (url.startsWith("http")) return url;
+                    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
+                    return `${apiBase.replace(/\/api\/v1$/, "")}${url}`;
+                  })()}
+                  alt={store?.name}
+                  className="h-10 lg:h-12 w-auto"
+                />
               ) : (
                 <div className="flex items-center space-x-2">
                   <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${brandColors.primary}15` }}>
@@ -412,7 +451,7 @@ export default function Layout() {
                   <button
                     onClick={() => setCategoriesOpen(!categoriesOpen)}
                     onMouseEnter={() => setCategoriesOpen(true)}
-                    className={`flex items-center space-x-1 px-4 py-2 font-medium rounded-lg transition-all text-sm ${categoriesOpen ? "bg-gray-100 text-gray-900" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"}`}
+                    className={`flex items-center space-x-1 px-4 py-2 font-medium rounded-lg transition-all text-sm ${categoriesOpen || location.pathname.startsWith("/categories/") ? "bg-indigo-100 text-indigo-900" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"}`}
                   >
                     <span>{terminology?.categories || "Categories"}</span>
                     <ChevronDown className={`w-4 h-4 transition-transform ${categoriesOpen ? "rotate-180" : ""}`} />
@@ -420,11 +459,20 @@ export default function Layout() {
                   {categoriesOpen && (
                     <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
                       {categories.length > 0 ? (
-                        categories.map((category) => (
-                          <Link key={category._id || category.id} to={`/products?category=${category.slug}`} onClick={() => setCategoriesOpen(false)} className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
-                            {category.name}
-                          </Link>
-                        ))
+                        categories.map((category) => {
+                          const isActive = location.pathname === `/categories/${category.slug}`;
+                          return (
+                            <Link
+                              key={category._id || category.id}
+                              to={`/categories/${category.slug}`}
+                              onClick={() => setCategoriesOpen(false)}
+                              className={`flex items-center px-4 py-2.5 text-sm transition-colors ${isActive ? "bg-indigo-50 text-indigo-700 font-medium border-l-2 border-indigo-600" : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"}`}
+                            >
+                              {isActive && <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 mr-2"></span>}
+                              {category.name}
+                            </Link>
+                          );
+                        })
                       ) : (
                         <div className="px-4 py-3 text-gray-500 text-sm">No categories</div>
                       )}
@@ -549,11 +597,11 @@ export default function Layout() {
                       <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Shop by Category</p>
                     </div>
                     {categories.map((category) => {
-                      const isActive = location.search.includes(`category=${category.slug}`);
+                      const isActive = location.pathname === `/categories/${category.slug}`;
                       return (
                         <Link
                           key={category._id || category.id}
-                          to={`/products?category=${category.slug}`}
+                          to={`/categories/${category.slug}`}
                           onClick={() => setMobileMenuOpen(false)}
                           className={`flex items-center justify-between px-4 py-3 rounded-xl ${isActive ? "bg-indigo-50 text-indigo-700 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
                         >
@@ -661,9 +709,28 @@ export default function Layout() {
                 <p className="text-gray-400 mt-1">Get the latest deals and updates delivered to your inbox</p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                <input type="email" placeholder="Enter your email" className="px-5 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-full sm:w-72" />
-                <button className="px-6 py-3 text-white font-semibold rounded-xl transition-colors" style={{ backgroundColor: brandColors.primary }}>
-                  Subscribe
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
+                  className="px-5 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-full sm:w-72"
+                />
+                <button
+                  disabled={newsletterLoading}
+                  onClick={async () => {
+                    if (!newsletterEmail.trim()) return;
+                    setNewsletterLoading(true);
+                    try {
+                      await contactAPI.subscribeNewsletter(newsletterEmail);
+                      setNewsletterEmail("");
+                    } catch {}
+                    setNewsletterLoading(false);
+                  }}
+                  className="px-6 py-3 text-white font-semibold rounded-xl transition-colors disabled:opacity-50"
+                  style={{ backgroundColor: brandColors.primary }}
+                >
+                  {newsletterLoading ? "..." : "Subscribe"}
                 </button>
               </div>
             </div>
@@ -681,22 +748,22 @@ export default function Layout() {
               </div>
               <p className="text-gray-400 mb-6 text-sm leading-relaxed">{store?.description || "Your one-stop shop for quality products at great prices."}</p>
               <div className="space-y-3 text-sm">
-                {store?.contactEmail && (
-                  <a href={`mailto:${store.contactEmail}`} className="flex items-center space-x-3 text-gray-400 hover:text-white">
+                {(store?.contact?.email || store?.contactEmail) && (
+                  <a href={`mailto:${store?.contact?.email || store?.contactEmail}`} className="flex items-center space-x-3 text-gray-400 hover:text-white">
                     <Mail className="w-4 h-4" />
-                    <span>{store.contactEmail}</span>
+                    <span>{store?.contact?.email || store?.contactEmail}</span>
                   </a>
                 )}
-                {store?.contactPhone && (
-                  <a href={`tel:${store.contactPhone}`} className="flex items-center space-x-3 text-gray-400 hover:text-white">
+                {(store?.contact?.phone || store?.contactPhone) && (
+                  <a href={`tel:${store?.contact?.phone || store?.contactPhone}`} className="flex items-center space-x-3 text-gray-400 hover:text-white">
                     <Phone className="w-4 h-4" />
-                    <span>{store.contactPhone}</span>
+                    <span>{store?.contact?.phone || store?.contactPhone}</span>
                   </a>
                 )}
-                {store?.address && (
+                {(store?.contact?.address || store?.address) && (
                   <div className="flex items-center space-x-3 text-gray-400">
                     <MapPin className="w-4 h-4 flex-shrink-0" />
-                    <span>{store.address}</span>
+                    <span>{store?.contact?.address?.street ? `${store.contact.address.street}, ${store.contact.address.city || ""}` : store?.address}</span>
                   </div>
                 )}
               </div>
@@ -820,18 +887,26 @@ export default function Layout() {
               <div className="mt-6">
                 <h5 className="text-white font-semibold mb-3">Follow Us</h5>
                 <div className="flex space-x-3">
-                  <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">
-                    <Facebook className="w-5 h-5" />
-                  </a>
-                  <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">
-                    <Twitter className="w-5 h-5" />
-                  </a>
-                  <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">
-                    <Instagram className="w-5 h-5" />
-                  </a>
-                  <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">
-                    <Youtube className="w-5 h-5" />
-                  </a>
+                  {(store?.socialLinks?.facebook || !store?.socialLinks) && (
+                    <a href={store?.socialLinks?.facebook || "#"} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">
+                      <Facebook className="w-5 h-5" />
+                    </a>
+                  )}
+                  {(store?.socialLinks?.twitter || !store?.socialLinks) && (
+                    <a href={store?.socialLinks?.twitter || "#"} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">
+                      <Twitter className="w-5 h-5" />
+                    </a>
+                  )}
+                  {(store?.socialLinks?.instagram || !store?.socialLinks) && (
+                    <a href={store?.socialLinks?.instagram || "#"} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">
+                      <Instagram className="w-5 h-5" />
+                    </a>
+                  )}
+                  {(store?.socialLinks?.youtube || !store?.socialLinks) && (
+                    <a href={store?.socialLinks?.youtube || "#"} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">
+                      <Youtube className="w-5 h-5" />
+                    </a>
+                  )}
                 </div>
               </div>
             </div>

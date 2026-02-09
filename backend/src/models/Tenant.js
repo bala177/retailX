@@ -43,7 +43,7 @@ const tenantSchema = new mongoose.Schema(
     // Store Type / Industry
     industry: {
       type: String,
-      enum: ["fashion", "grocery", "cosmetics", "electronics", "stationery", "general", "wellness", "healthcare", "other"],
+      enum: ["fashion", "grocery", "food", "cosmetics", "electronics", "stationery", "general", "wellness", "healthcare", "other"],
       default: "general",
     },
 
@@ -288,6 +288,43 @@ const tenantSchema = new mongoose.Schema(
       ogImage: String,
     },
 
+    // About Page Content (dynamic, not hardcoded)
+    aboutContent: {
+      headline: { type: String, default: "" },
+      description: { type: String, default: "" },
+      story: { type: String, default: "" },
+      mission: { type: String, default: "" },
+      images: [String],
+      values: [
+        {
+          icon: String,
+          title: String,
+          description: String,
+        },
+      ],
+      stats: [
+        {
+          label: String,
+          value: String,
+        },
+      ],
+      features: [
+        {
+          title: String,
+          description: String,
+        },
+      ],
+    },
+
+    // Promo Banner (dynamic)
+    promoBanner: {
+      enabled: { type: Boolean, default: false },
+      text: { type: String, default: "" },
+      link: { type: String, default: "" },
+      backgroundColor: { type: String, default: "#4F46E5" },
+      textColor: { type: String, default: "#FFFFFF" },
+    },
+
     // Social Links
     socialLinks: {
       facebook: String,
@@ -378,8 +415,6 @@ const tenantSchema = new mongoose.Schema(
 
 // Indexes
 tenantSchema.index({ status: 1, createdAt: -1 });
-tenantSchema.index({ "domains.subdomain": 1 });
-tenantSchema.index({ "domains.customDomain": 1 });
 tenantSchema.index({ industry: 1 });
 
 // Pre-save middleware to generate slug

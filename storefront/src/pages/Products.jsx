@@ -38,7 +38,7 @@ export default function Products() {
   // Sync filters with URL params when URL changes
   useEffect(() => {
     setFilters({
-      category: searchParams.get("category") || categorySlug || "",
+      category: categorySlug || searchParams.get("category") || "",
       sort: searchParams.get("sort") || "-createdAt",
       minPrice: searchParams.get("minPrice") || "",
       maxPrice: searchParams.get("maxPrice") || "",

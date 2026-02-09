@@ -3,6 +3,7 @@ const { authenticate, optionalAuth, authorize, authorizePermission, superAdminOn
 const { errorHandler, notFound, asyncHandler } = require("./errorHandler");
 const { helmetMiddleware, generalRateLimiter, authRateLimiter, passwordResetRateLimiter, tenantRateLimiter, sanitizeInput, preventParamPollution, xssProtection, requestId, securityHeaders, logSecurityEvent } = require("./security");
 const { handleValidation, validators, authValidation, tenantValidation, productValidation, categoryValidation, orderValidation, cartValidation } = require("./validators");
+const { upload, optimizeImage } = require("./upload");
 
 module.exports = {
   // Tenant
@@ -54,4 +55,8 @@ module.exports = {
   categoryValidation,
   orderValidation,
   cartValidation,
+
+  // Upload
+  upload,
+  optimizeImage,
 };

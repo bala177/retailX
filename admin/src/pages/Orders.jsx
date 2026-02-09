@@ -73,6 +73,23 @@ export default function Orders() {
     });
   };
 
+  const handleExport = () => {
+    if (!orders.length) {
+      toast?.("No orders to export") || alert("No orders to export");
+      return;
+    }
+    const headers = ["Order Number", "Customer", "Email", "Items", "Total", "Status", "Payment", "Date"];
+    const rows = orders.map((o) => [o.orderNumber, `${o.customer?.firstName || ""} ${o.customer?.lastName || ""}`.trim(), o.customer?.email || "", o.items?.length || 0, `$${o.totals?.total?.toFixed(2) || "0.00"}`, o.status, o.paymentStatus, new Date(o.createdAt).toLocaleDateString()]);
+    const csv = [headers.join(","), ...rows.map((r) => r.map((c) => `"${c}"`).join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `orders-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -81,7 +98,7 @@ export default function Orders() {
           <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
           <p className="text-gray-500 mt-1">Manage customer orders</p>
         </div>
-        <button className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">
+        <button onClick={handleExport} className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">
           <Download className="w-5 h-5" />
           <span>Export</span>
         </button>

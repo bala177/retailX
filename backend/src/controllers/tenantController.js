@@ -211,6 +211,7 @@ const getCurrentTenant = asyncHandler(async (req, res) => {
       guestCheckout: req.tenant.settings.guestCheckout,
       reviewsEnabled: req.tenant.settings.reviewsEnabled,
       wishlistEnabled: req.tenant.settings.wishlistEnabled,
+      taxRate: req.tenant.settings.taxRate || 0,
     },
     contact: {
       email: req.tenant.contact?.email,
@@ -221,6 +222,9 @@ const getCurrentTenant = asyncHandler(async (req, res) => {
     socialLinks: req.tenant.socialLinks,
     shipping: req.tenant.shipping,
     features: req.tenant.features,
+    bookingSettings: req.tenant.bookingSettings,
+    aboutContent: req.tenant.aboutContent,
+    promoBanner: req.tenant.promoBanner,
   };
 
   res.json({
@@ -245,7 +249,7 @@ const updateCurrentTenantSettings = asyncHandler(async (req, res) => {
     throw new ForbiddenError("You do not have permission to update this store");
   }
 
-  const allowedFields = ["name", "description", "contact", "branding", "settings", "features", "seo", "socialLinks", "shipping"];
+  const allowedFields = ["name", "description", "contact", "branding", "settings", "features", "seo", "socialLinks", "shipping", "aboutContent", "promoBanner", "bookingSettings", "businessType", "serviceSettings", "industry"];
 
   allowedFields.forEach((field) => {
     if (req.body[field] !== undefined) {
