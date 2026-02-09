@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useStore } from "../context/StoreContext";
 import { useCart } from "../context/CartContext";
-import { productsAPI, reviewsAPI } from "../services/api";
+import { productsAPI, reviewsAPI, resolveImageUrl } from "../services/api";
 import ProductCard from "../components/ProductCard";
 import ServiceCard from "../components/ServiceCard";
 import BookingModal from "../components/BookingModal";
@@ -123,14 +123,8 @@ export default function ProductDetail() {
     );
   }
 
-  const resolveUrl = (url) => {
-    if (!url) return null;
-    if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
-    return `${apiBase.replace(/\/api\/v1$/, "")}${url}`;
-  };
   const rawImages = product.images?.length > 0 ? product.images : [{ url: product.primaryImage || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600" }];
-  const images = rawImages.map((img) => ({ ...img, url: resolveUrl(img.url) || img.url }));
+  const images = rawImages.map((img) => ({ ...img, url: resolveImageUrl(img.url) || img.url }));
 
   // Get prices from product schema
   const currentPrice = product.pricing?.salePrice || product.pricing?.basePrice || product.currentPrice || 0;

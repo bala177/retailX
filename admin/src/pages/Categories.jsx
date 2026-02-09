@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTenant } from "../context/TenantContext";
+import { resolveImageUrl } from "../services/api";
 import { Plus, Search, Edit, Trash2, FolderTree, ChevronRight, ChevronDown, X, Save, Image as ImageIcon } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -177,7 +178,7 @@ export default function Categories() {
                 <span className="w-6 mr-2" />
               )}
               {category.image ? (
-                <img src={category.image} alt={category.name} className="w-10 h-10 rounded-lg object-cover mr-3" />
+                <img src={resolveImageUrl(category.image)} alt={category.name} className="w-10 h-10 rounded-lg object-cover mr-3" />
               ) : (
                 <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
                   <FolderTree className="w-5 h-5 text-gray-400" />

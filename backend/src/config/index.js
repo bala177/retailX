@@ -39,10 +39,12 @@ module.exports = {
 
   // CORS
   cors: {
-    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",") : ["http://localhost:3000", "http://localhost:3001", "http://localhost:5001", "http://localhost:5002"],
+    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",").map((s) => s.trim()) : ["http://localhost:3000", "http://localhost:3001", "http://localhost:5001", "http://localhost:5002"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "x-store-slug", "X-Tenant-ID"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-store-slug", "X-Tenant-ID", "X-Request-ID"],
+    exposedHeaders: ["X-Request-ID"],
+    maxAge: 86400, // Cache preflight for 24 hours
   },
 
   // File Upload

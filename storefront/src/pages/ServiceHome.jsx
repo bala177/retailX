@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useStore } from "../context/StoreContext";
-import { categoriesAPI, productsAPI } from "../services/api";
+import { categoriesAPI, productsAPI, resolveImageUrl } from "../services/api";
 import PhotoGallery from "../components/PhotoGallery";
 import TeamSection from "../components/TeamSection";
 import TestimonialsSection from "../components/TestimonialsSection";
@@ -11,16 +11,6 @@ import ServiceCard from "../components/ServiceCard";
 import BookingModal from "../components/BookingModal";
 import { ArrowRight, Star, Clock, Phone, MapPin, Sparkles, CheckCircle, BadgeCheck, Gift, Users, Award, Heart, Calendar, Footprints } from "lucide-react";
 import { useState, useEffect } from "react";
-
-// Resolve image URL - handles both absolute URLs and relative upload paths
-const resolveImageUrl = (url) => {
-  if (!url) return null;
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  // For relative paths like /uploads/heroes/..., prepend the API origin
-  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
-  const origin = apiBase.replace(/\/api\/v1$/, "");
-  return `${origin}${url}`;
-};
 
 export default function ServiceHome() {
   const { store, storeSlug } = useStore();

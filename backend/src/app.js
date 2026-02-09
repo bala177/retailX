@@ -16,8 +16,9 @@ const app = express();
 // Trust proxy (for rate limiting behind reverse proxy)
 app.set("trust proxy", 1);
 
-// Security middleware
-// CORS - must be before other middleware
+// CORS - MUST be the very first middleware (before helmet/security)
+// Handle preflight OPTIONS requests explicitly
+app.options("*", cors(config.cors));
 app.use(cors(config.cors));
 
 // Security middleware

@@ -1,4 +1,5 @@
 import { useStore } from "../context/StoreContext";
+import { resolveImageUrl } from "../services/api";
 import { Award, Heart, Users, Clock, Target, Sparkles, CheckCircle, ArrowRight, Footprints } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -102,8 +103,8 @@ export default function AboutSection() {
     subheadline: aboutData.description || fallback.subheadline,
     description: aboutData.description || fallback.description,
     story: aboutData.story || fallback.story,
-    image: aboutData.images?.[0] || fallback.image,
-    secondaryImage: aboutData.images?.[1] || fallback.secondaryImage,
+    image: resolveImageUrl(aboutData.images?.[0]) || fallback.image,
+    secondaryImage: resolveImageUrl(aboutData.images?.[1]) || fallback.secondaryImage,
     values: aboutData.values?.length > 0 ? aboutData.values.map((v) => ({ icon: Heart, title: v.title, desc: v.description, emoji: v.icon })) : fallback.values,
     stats: aboutData.stats?.length > 0 ? aboutData.stats : fallback.stats,
     features: aboutData.features?.length > 0 ? aboutData.features : fallback.features,

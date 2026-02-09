@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTenant } from "../context/TenantContext";
+import { resolveImageUrl } from "../services/api";
 import { Package, ShoppingCart, Users, DollarSign, ArrowRight, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -96,7 +97,7 @@ export default function Dashboard() {
             ) : (
               products.slice(0, 5).map((product) => (
                 <div key={product._id} className="flex items-center p-4 hover:bg-gray-50">
-                  <img src={product.primaryImage || "https://via.placeholder.com/60"} alt={product.name} className="w-12 h-12 rounded-lg object-cover" />
+                  <img src={resolveImageUrl(product.primaryImage) || "https://placehold.co/60x60?text=No+Image"} alt={product.name} className="w-12 h-12 rounded-lg object-cover" />
                   <div className="ml-4 flex-1">
                     <p className="text-sm font-medium text-gray-900">{product.name}</p>
                     <p className="text-sm text-gray-500">{product.category?.name}</p>

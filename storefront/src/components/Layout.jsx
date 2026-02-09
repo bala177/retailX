@@ -5,7 +5,7 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { ShoppingBag, Search, Menu, X, User, Heart, ChevronDown, Store, Phone, Mail, MapPin, Facebook, Twitter, Instagram, Youtube, CreditCard, Truck, Shield, Clock, ChevronRight, Tag, Calendar, LogIn, LogOut, Settings } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { categoriesAPI, contactAPI } from "../services/api";
+import { categoriesAPI, contactAPI, resolveImageUrl } from "../services/api";
 import CartDrawer from "./CartDrawer";
 import ScrollToTop from "./ScrollToTop";
 
@@ -267,17 +267,7 @@ export default function Layout() {
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-3 flex-shrink-0">
               {store?.branding?.logo || store?.logo ? (
-                <img
-                  src={(() => {
-                    const url = store.branding?.logo || store.logo;
-                    if (!url) return url;
-                    if (url.startsWith("http")) return url;
-                    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
-                    return `${apiBase.replace(/\/api\/v1$/, "")}${url}`;
-                  })()}
-                  alt={store?.name}
-                  className="h-10 lg:h-12 w-auto"
-                />
+                <img src={resolveImageUrl(store.branding?.logo || store.logo)} alt={store?.name} className="h-10 lg:h-12 w-auto" />
               ) : (
                 <div className="flex items-center space-x-2">
                   <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${brandColors.primary}15` }}>

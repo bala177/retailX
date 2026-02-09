@@ -1,21 +1,11 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useStore } from "../context/StoreContext";
-import { productsAPI, categoriesAPI } from "../services/api";
+import { productsAPI, categoriesAPI, resolveImageUrl } from "../services/api";
 import ProductCard from "../components/ProductCard";
 import ContactSection from "../components/ContactSection";
 import { ArrowRight, Truck, Shield, RefreshCw, Headphones, ChevronRight, Star, TrendingUp, Sparkles, Tag, Clock, Award, Heart, Zap, Gift, ShoppingBag, Play, Percent, Calendar, BadgeCheck, Sparkle, ThumbsUp } from "lucide-react";
 import React, { useState, useEffect } from "react";
-
-// Resolve image URL - handles both absolute URLs and relative upload paths
-const resolveImageUrl = (url) => {
-  if (!url) return null;
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  // For relative paths like /uploads/heroes/..., prepend the API origin
-  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
-  const origin = apiBase.replace(/\/api\/v1$/, "");
-  return `${origin}${url}`;
-};
 
 export default function Home() {
   const { store, storeSlug } = useStore();

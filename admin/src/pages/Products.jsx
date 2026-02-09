@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { useTenant } from "../context/TenantContext";
+import { resolveImageUrl } from "../services/api";
 import { Plus, Search, Filter, Edit, Trash2, Eye, ChevronLeft, ChevronRight, Package, AlertCircle } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -181,7 +182,7 @@ export default function Products() {
                     <tr key={product._id} className="hover:bg-gray-50">
                       <td className="py-4 px-4">
                         <div className="flex items-center">
-                          <img src={product.primaryImage || "https://via.placeholder.com/48"} alt={product.name} className="w-12 h-12 rounded-lg object-cover" />
+                          <img src={resolveImageUrl(product.primaryImage) || "https://placehold.co/48x48?text=No+Image"} alt={product.name} className="w-12 h-12 rounded-lg object-cover" />
                           <div className="ml-3">
                             <p className="text-sm font-medium text-gray-900">{product.name}</p>
                             <p className="text-xs text-gray-500">SKU: {product.sku}</p>

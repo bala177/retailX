@@ -14,9 +14,9 @@ const uploadImage = asyncHandler(async (req, res) => {
     throw new BadRequestError("No file uploaded");
   }
 
-  const baseUrl = `${req.protocol}://${req.get("host")}`;
   const type = req.params.type || "general";
-  const fileUrl = `${baseUrl}/uploads/${type}/${req.file.filename}`;
+  // Always use relative paths - frontend resolves the full URL based on API origin
+  const fileUrl = `/uploads/${type}/${req.file.filename}`;
 
   logger.info(`Image uploaded: ${type}/${req.file.filename}`);
 
@@ -41,11 +41,11 @@ const uploadMultipleImages = asyncHandler(async (req, res) => {
     throw new BadRequestError("No files uploaded");
   }
 
-  const baseUrl = `${req.protocol}://${req.get("host")}`;
   const type = req.params.type || "general";
 
+  // Always use relative paths - frontend resolves the full URL based on API origin
   const images = req.files.map((file) => ({
-    url: `${baseUrl}/uploads/${type}/${file.filename}`,
+    url: `/uploads/${type}/${file.filename}`,
     filename: file.filename,
     type,
     size: file.size,

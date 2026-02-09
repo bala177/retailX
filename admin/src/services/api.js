@@ -2,11 +2,21 @@ import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
 
+// Resolve image URLs - handles relative upload paths and absolute URLs
+export const resolveImageUrl = (url) => {
+  if (!url) return null;
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) return url;
+  // For relative paths like /uploads/products/..., prepend the API origin
+  const origin = API_BASE_URL.replace(/\/api\/v1$/, "");
+  return `${origin}${url}`;
+};
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true,
 });
 
 // Request interceptor to add auth token
@@ -133,15 +143,15 @@ export const createStoreAPI = (tenantSlug) => ({
   // Staff
   staff: {
     getAll: () => api.get(`/store/${tenantSlug}/staff`),
-    create: (data) => api.post(`/store/${tenantSlug}/admin/staff`, data),
-    update: (id, data) => api.patch(`/store/${tenantSlug}/admin/staff/${id}`, data),
-    delete: (id) => api.delete(`/store/${tenantSlug}/admin/staff/${id}`),
+    create: (data) => api.post(`/store/${tenantSlug}/staff`, data),
+    update: (id, data) => api.patch(`/store/${tenantSlug}/staff/${id}`, data),
+    delete: (id) => api.delete(`/store/${tenantSlug}/staff/${id}`),
   },
 
   // Contact / Newsletter
   contact: {
-    getMessages: (params) => api.get(`/store/${tenantSlug}/admin/contact`, { params }),
-    updateMessage: (id, data) => api.patch(`/store/${tenantSlug}/admin/contact/${id}`, data),
+    getMessages: (params) => api.get(`/store/${tenantSlug}/admin/contacts`, { params }),
+    updateMessage: (id, data) => api.patch(`/store/${tenantSlug}/admin/contacts/${id}`, data),
     getSubscribers: () => api.get(`/store/${tenantSlug}/admin/newsletter`),
   },
 

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useStore } from "../context/StoreContext";
+import { resolveImageUrl } from "../services/api";
 import { ShoppingCart, Eye, Heart, Star, Check, Truck, Calendar, Clock } from "lucide-react";
 import { useState } from "react";
 
@@ -27,14 +28,8 @@ export default function ProductCard({ product, showSaleBadge, showNewBadge }) {
 
   // Get images
   const images = product.images || [];
-  const resolveUrl = (url) => {
-    if (!url) return null;
-    if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
-    return `${apiBase.replace(/\/api\/v1$/, "")}${url}`;
-  };
-  const primaryImage = resolveUrl(product.primaryImage || images.find((img) => img.isPrimary)?.url || images[0]?.url) || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400";
-  const hoverImage = resolveUrl(images[1]?.url) || primaryImage;
+  const primaryImage = resolveImageUrl(product.primaryImage || images.find((img) => img.isPrimary)?.url || images[0]?.url) || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400";
+  const hoverImage = resolveImageUrl(images[1]?.url) || primaryImage;
 
   // Get duration for services
   const duration = product.variantOptions?.find((v) => v.name === "Duration")?.values?.[0] || null;

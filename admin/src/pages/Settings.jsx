@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTenant } from "../context/TenantContext";
+import { resolveImageUrl } from "../services/api";
 import { Save, Store, Globe, Mail, Phone, MapPin, Palette, CreditCard, Truck, Image as ImageIcon, Upload, X, Clock, Megaphone, Info } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../services/api";
@@ -168,7 +169,7 @@ export default function Settings() {
       <div className="flex items-center gap-4">
         {formData.branding?.[field] ? (
           <div className="relative">
-            <img src={formData.branding[field]} alt={label} className={`${previewClass} object-cover border rounded-lg`} />
+            <img src={resolveImageUrl(formData.branding[field])} alt={label} className={`${previewClass} object-cover border rounded-lg`} />
             <button type="button" onClick={() => handleChange(`branding.${field}`, "")} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1">
               <X className="w-3 h-3" />
             </button>

@@ -1,4 +1,5 @@
 import { useStore } from "../context/StoreContext";
+import { resolveImageUrl } from "../services/api";
 import { Clock, Star, Calendar, Heart, Award, Footprints, Scissors, Activity, Sparkles } from "lucide-react";
 import { useState } from "react";
 
@@ -95,7 +96,7 @@ export default function ServiceCard({ service, variant = "default", onBook }) {
   const duration = service.variantOptions?.find((v) => v.name === "Duration")?.values?.[0] || service.duration || "60 min";
 
   // Get primary image - use service image or smart default based on store type
-  const primaryImage = service.primaryImage || service.images?.[0]?.url || getDefaultImage(service, storeSlug);
+  const primaryImage = resolveImageUrl(service.primaryImage || service.images?.[0]?.url) || getDefaultImage(service, storeSlug);
 
   // Get icon for placeholder
   const ServiceIcon = getServiceIcon(service);
