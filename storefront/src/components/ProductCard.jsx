@@ -12,6 +12,7 @@ export default function ProductCard({ product, showSaleBadge, showNewBadge }) {
   const [isHovered, setIsHovered] = useState(false);
   const [imageIndex, setImageIndex] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   // Bakery detection
   const isBakeryStore = (() => {
@@ -91,7 +92,7 @@ export default function ProductCard({ product, showSaleBadge, showNewBadge }) {
       {/* Image Container */}
       <div className="relative aspect-square overflow-hidden bg-gray-50">
         <Link to={`/products/${product.slug}`}>
-          <img src={isHovered ? hoverImage : primaryImage} alt={product.name} className="w-full h-full object-cover transition-all duration-500 ease-out" loading="lazy" />
+          <img src={imgError ? "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400" : isHovered ? hoverImage : primaryImage} alt={product.name} className="w-full h-full object-cover transition-all duration-500 ease-out" loading="lazy" onError={() => setImgError(true)} />
         </Link>
 
         {/* Badges */}

@@ -5,7 +5,8 @@ function getCapacityForProduct(productId) {
   // Use productId hash to generate consistent pseudo-random capacity
   const hash = (productId || "").split("").reduce((a, c) => a + c.charCodeAt(0), 0);
   const dailyLimit = 15 + (hash % 10); // 15-24 per day
-  const ordersToday = Math.floor(Math.random() * dailyLimit * 0.9); // Simulated
+  // Deterministic "random-like" value so UI does not flicker on re-renders
+  const ordersToday = (hash * 7) % Math.max(1, Math.floor(dailyLimit * 0.9));
   const remaining = Math.max(0, dailyLimit - ordersToday);
   return { dailyLimit, ordersToday, remaining };
 }

@@ -1,18 +1,16 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useStore } from "../context/StoreContext";
 import { productsAPI, categoriesAPI, resolveImageUrl } from "../services/api";
 import ProductCard from "../components/ProductCard";
 import ContactSection from "../components/ContactSection";
 import BakeryTrust from "../components/BakeryTrust";
-import { ArrowRight, Truck, Shield, RefreshCw, Headphones, ChevronRight, Star, TrendingUp, Sparkles, Tag, Clock, Award, Heart, Gift, ShoppingBag, Percent, Calendar, BadgeCheck, Sparkle, ThumbsUp, Search } from "lucide-react";
+import { ArrowRight, Truck, Shield, RefreshCw, Headphones, ChevronRight, Star, TrendingUp, Sparkles, Tag, Clock, Award, Heart, Gift, ShoppingBag, Percent, Calendar, BadgeCheck, Sparkle, ThumbsUp } from "lucide-react";
 import React, { useState, useEffect } from "react";
 
 export default function Home() {
   const { store, storeSlug } = useStore();
-  const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch featured products
   const { data: featuredData } = useQuery({
@@ -151,12 +149,6 @@ export default function Home() {
     return categoryImages.default;
   };
 
-  // ========== HERO SEARCH ==========
-  const handleHeroSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
-  };
-
   // ========== STORE THEME ==========
   const storeBackgrounds = {
     bakery: {
@@ -292,19 +284,19 @@ export default function Home() {
   // RENDER
   // =========================================
   return (
-    <div className={`min-h-screen ${bakery ? "bg-amber-50/30" : "bg-gray-50"}`}>
+    <div className={`min-h-screen ${bakery ? "bg-rose-50" : "bg-gray-50"}`}>
       {/* ===================== HERO ===================== */}
       {bakery ? (
         <section className="relative overflow-hidden">
-          {/* Warm bakery background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-900 via-orange-900 to-rose-900" />
-          <div className="absolute inset-0 bg-cover bg-center opacity-20" style={{ backgroundImage: `url(${heroSlides[currentSlide].image})` }} />
-          <div className="absolute inset-0 bg-gradient-to-r from-amber-950/80 via-amber-950/50 to-transparent" />
+          {/* Light bakery background */}
+          <div className="absolute inset-0 bg-rose-50" />
+          <div className="absolute inset-0 bg-cover bg-center opacity-10" style={{ backgroundImage: `url(${heroSlides[currentSlide].image})` }} />
+          <div className="absolute inset-0 bg-white/60" />
 
           {/* Decorative elements */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute -top-20 -right-20 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl" />
-            <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl" />
+            <div className="absolute -top-20 -right-20 w-80 h-80 bg-pink-200/40 rounded-full blur-3xl" />
+            <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-purple-200/30 rounded-full blur-3xl" />
             <svg className="absolute bottom-0 left-0 w-full opacity-[0.03]" viewBox="0 0 1440 320">
               <path fill="#fff" d="M0,192L48,181.3C96,171,192,149,288,154.7C384,160,480,192,576,197.3C672,203,768,181,864,165.3C960,149,1056,139,1152,149.3C1248,160,1344,192,1392,208L1440,224L1440,320L0,320Z" />
             </svg>
@@ -313,34 +305,19 @@ export default function Home() {
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               {/* Left: text */}
-              <div className="text-white">
-                <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-amber-500/20 border border-amber-400/30 backdrop-blur-sm mb-6">{heroSlides[currentSlide].badge}</span>
-                <p className="text-amber-300 text-lg font-semibold tracking-wide mb-2">{heroSlides[currentSlide].highlight}</p>
+              <div className="text-gray-900">
+                <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-pink-100 border border-pink-200 mb-6">{heroSlides[currentSlide].badge}</span>
+                <p className="text-pink-600 text-lg font-semibold tracking-wide mb-2">{heroSlides[currentSlide].highlight}</p>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">{heroSlides[currentSlide].title}</h1>
-                <p className="mt-6 text-lg text-amber-100/80 leading-relaxed max-w-lg">{heroSlides[currentSlide].subtitle}</p>
-
-                <form onSubmit={handleHeroSearch} className="mt-8 max-w-md">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search cakes, pastries, treats..."
-                      className="w-full pl-5 pr-14 py-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-amber-400/50 transition-all"
-                    />
-                    <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 rounded-xl bg-amber-500 text-white hover:bg-amber-400 transition-all">
-                      <Search className="w-5 h-5" />
-                    </button>
-                  </div>
-                </form>
+                <p className="mt-6 text-lg text-gray-600 leading-relaxed max-w-lg">{heroSlides[currentSlide].subtitle}</p>
 
                 <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                  <Link to={heroSlides[currentSlide].ctaLink} className="inline-flex items-center justify-center px-8 py-4 bg-amber-500 hover:bg-amber-400 text-white font-bold rounded-2xl transition-all shadow-lg shadow-amber-500/25 group">
+                  <Link to={heroSlides[currentSlide].ctaLink} className="inline-flex items-center justify-center px-8 py-4 bg-pink-500 hover:bg-pink-400 text-white font-bold rounded-2xl transition-all shadow-lg shadow-pink-300/40 group">
                     <ShoppingBag className="w-5 h-5 mr-2" />
                     {heroSlides[currentSlide].cta}
                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Link>
-                  <Link to="/products" className="inline-flex items-center justify-center px-8 py-4 border-2 border-white/30 text-white font-bold rounded-2xl hover:bg-white/10 transition-all">
+                  <Link to="/products" className="inline-flex items-center justify-center px-8 py-4 border-2 border-pink-200 text-pink-700 font-bold rounded-2xl hover:bg-pink-50 transition-all">
                     View Full Menu
                   </Link>
                 </div>
@@ -354,18 +331,18 @@ export default function Home() {
                     { label: "🧁 Cupcakes", search: "cupcake" },
                     { label: "🍪 Cookies", search: "cookies" },
                   ].map((event) => (
-                    <Link key={event.search} to={`/products?search=${event.search}`} className="px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white text-sm font-medium rounded-full hover:bg-white/20 transition-all">
+                    <Link key={event.search} to={`/products?search=${event.search}`} className="px-4 py-2 bg-white border border-pink-100 text-gray-700 text-sm font-medium rounded-full hover:bg-pink-50 transition-all">
                       {event.label}
                     </Link>
                   ))}
                 </div>
 
                 {/* Same-Day Delivery Banner */}
-                <div className="mt-6 inline-flex items-center px-5 py-3 bg-emerald-500/20 border border-emerald-400/30 backdrop-blur-sm rounded-2xl">
-                  <Clock className="w-5 h-5 text-emerald-300 mr-3" />
+                <div className="mt-6 inline-flex items-center px-5 py-3 bg-emerald-50 border border-emerald-200 rounded-2xl">
+                  <Clock className="w-5 h-5 text-emerald-600 mr-3" />
                   <div>
-                    <p className="text-sm font-semibold text-white">⚡ Same-Day Delivery Available</p>
-                    <p className="text-xs text-emerald-200">Order before 10 AM for delivery today in your city</p>
+                    <p className="text-sm font-semibold text-emerald-700">⚡ Same-Day Delivery Available</p>
+                    <p className="text-xs text-emerald-600">Order before 10 AM for delivery today in your city</p>
                   </div>
                 </div>
 
@@ -379,10 +356,10 @@ export default function Home() {
                       ]
                   ).map((stat, i) => (
                     <React.Fragment key={i}>
-                      {i > 0 && <div className="w-px h-10 bg-amber-400/30" />}
+                      {i > 0 && <div className="w-px h-10 bg-pink-200" />}
                       <div>
-                        <p className="text-2xl font-bold text-amber-300">{stat.value}</p>
-                        <p className="text-amber-100/60 text-sm">{stat.label}</p>
+                        <p className="text-2xl font-bold text-pink-600">{stat.value}</p>
+                        <p className="text-gray-500 text-sm">{stat.label}</p>
                       </div>
                     </React.Fragment>
                   ))}
@@ -391,8 +368,8 @@ export default function Home() {
 
               {/* Right: image */}
               <div className="hidden lg:flex items-center justify-center relative">
-                <div className="absolute inset-0 rounded-full blur-3xl opacity-20 bg-amber-500 scale-75" />
-                <div className="relative w-80 h-80 xl:w-[420px] xl:h-[420px] rounded-3xl overflow-hidden border-4 border-amber-400/20 shadow-2xl shadow-amber-900/30 rotate-2 hover:rotate-0 transition-transform duration-500">
+                <div className="absolute inset-0 rounded-full blur-3xl opacity-25 bg-pink-200 scale-75" />
+                <div className="relative w-80 h-80 xl:w-[420px] xl:h-[420px] rounded-3xl overflow-hidden border-4 border-pink-200 shadow-2xl shadow-pink-200/40 rotate-2 hover:rotate-0 transition-transform duration-500">
                   <img src={heroSlides[currentSlide].productImage} alt="Featured treat" className="w-full h-full object-cover" />
                 </div>
                 <div className="absolute -top-2 -right-2 bg-white rounded-2xl px-4 py-3 shadow-xl">
@@ -404,7 +381,7 @@ export default function Home() {
                 <div className="absolute -bottom-2 -left-2 bg-white rounded-2xl px-4 py-3 shadow-xl">
                   <div className="flex items-center gap-1.5">
                     {[1, 2, 3, 4, 5].map((i) => (
-                      <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                      <Star key={i} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
                     ))}
                     <span className="font-bold text-gray-900 text-sm ml-1">4.9</span>
                   </div>
@@ -415,7 +392,7 @@ export default function Home() {
             {/* Slide dots */}
             <div className="flex justify-center gap-3 mt-12">
               {heroSlides.map((_, i) => (
-                <button key={i} onClick={() => setCurrentSlide(i)} className={`h-2.5 rounded-full transition-all duration-300 ${i === currentSlide ? "bg-amber-400 w-10" : "bg-white/30 w-2.5 hover:bg-white/50"}`} />
+                <button key={i} onClick={() => setCurrentSlide(i)} className={`h-2.5 rounded-full transition-all duration-300 ${i === currentSlide ? "bg-pink-300 w-10" : "bg-pink-200 w-2.5 hover:bg-pink-300"}`} />
               ))}
             </div>
           </div>
@@ -443,21 +420,6 @@ export default function Home() {
                     </p>
                     <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black leading-[1.1] tracking-tight">{slide.title}</h1>
                     <p className="mt-6 text-lg md:text-xl text-white/80 leading-relaxed max-w-lg">{slide.subtitle}</p>
-
-                    <form onSubmit={handleHeroSearch} className="mt-8 max-w-md">
-                      <div className="relative">
-                        <input
-                          type="text"
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          placeholder="Search for products..."
-                          className="w-full pl-5 pr-14 py-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
-                        />
-                        <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 rounded-full text-white transition-all hover:scale-110" style={{ backgroundColor: accentColor }}>
-                          <ArrowRight className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </form>
 
                     <div className="mt-8 flex flex-col sm:flex-row gap-4">
                       <Link to={slide.ctaLink} className="inline-flex items-center justify-center px-8 py-4 bg-white text-gray-900 font-bold rounded-full hover:bg-gray-100 transform hover:scale-105 transition-all shadow-2xl group">

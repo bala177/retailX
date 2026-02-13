@@ -25,6 +25,8 @@ export default function Layout() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterLoading, setNewsletterLoading] = useState(false);
+  const [showKeyboardHint, setShowKeyboardHint] = useState(false);
+  const showTopStrip = false; // Hide in demos
 
   // Detect bakery/cake shop
   const isBakeryStore = () => {
@@ -78,10 +80,30 @@ export default function Layout() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [location.pathname, isServiceBased]);
 
-  // Close mobile menu on route change
+  // Keyboard shortcut for store switcher (Ctrl+Shift+S)
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      // Ctrl+Shift+S or Cmd+Shift+S
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "S") {
+        e.preventDefault();
+        setShowKeyboardHint(true);
+        setTimeout(() => setShowKeyboardHint(false), 2000);
+        navigate("/select-store");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [navigate]);
+
+  // Close mobile menu on route change & scroll to top
   useEffect(() => {
     setMobileMenuOpen(false);
     setSearchOpen(false);
+    // Scroll to top on route change (unless there's a hash for section scrolling)
+    if (!location.hash) {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
   }, [location.pathname]);
 
   // Handle smooth scrolling for hash links
@@ -172,77 +194,78 @@ export default function Layout() {
   return (
     <div className={`min-h-screen flex flex-col ${bakery ? "bg-amber-50/30 bakery-theme" : "bg-gray-50"}`}>
       {/* Top Banner with Store Switcher & RetailX Branding */}
-      {store?.promoBanner?.enabled ? (
-        <div className="text-center py-2 text-sm font-medium" style={{ backgroundColor: store.promoBanner.backgroundColor || brandColors.primary, color: store.promoBanner.textColor || "#FFFFFF" }}>
-          <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
-            <Link to="/select-store" className="flex items-center space-x-2 hover:opacity-80 px-3 py-1.5 rounded-full transition-colors group">
-              <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
-                <Store className="w-3.5 h-3.5" />
+      {showTopStrip &&
+        (store?.promoBanner?.enabled ? (
+          <div className="text-center py-2 text-sm font-medium" style={{ backgroundColor: store.promoBanner.backgroundColor || brandColors.primary, color: store.promoBanner.textColor || "#FFFFFF" }}>
+            <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
+              <Link to="/select-store" className="flex items-center space-x-2 hover:opacity-80 px-3 py-1.5 rounded-full transition-colors group">
+                <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
+                  <Store className="w-3.5 h-3.5" />
+                </div>
+                <span className="hidden sm:inline font-semibold">RetailX</span>
+                <ChevronRight className="w-4 h-4 opacity-60 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+              <div className="flex items-center space-x-2">
+                {store.promoBanner.link ? (
+                  <a href={store.promoBanner.link} className="hover:underline">
+                    {store.promoBanner.text}
+                  </a>
+                ) : (
+                  <span>{store.promoBanner.text}</span>
+                )}
               </div>
-              <span className="hidden sm:inline font-semibold">RetailX</span>
-              <ChevronRight className="w-4 h-4 opacity-60 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-            <div className="flex items-center space-x-2">
-              {store.promoBanner.link ? (
-                <a href={store.promoBanner.link} className="hover:underline">
-                  {store.promoBanner.text}
-                </a>
-              ) : (
-                <span>{store.promoBanner.text}</span>
-              )}
+              <Link to="/select-store" className="flex items-center space-x-2 hover:opacity-80 px-3 py-1.5 rounded-full transition-colors">
+                <span className="text-xs font-medium">{store?.name || "Select Store"}</span>
+                <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
+                  <ChevronDown className="w-3 h-3" />
+                </div>
+              </Link>
             </div>
-            <Link to="/select-store" className="flex items-center space-x-2 hover:opacity-80 px-3 py-1.5 rounded-full transition-colors">
-              <span className="text-xs font-medium">{store?.name || "Select Store"}</span>
-              <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
-                <ChevronDown className="w-3 h-3" />
-              </div>
-            </Link>
           </div>
-        </div>
-      ) : (
-        <div className="text-white text-center py-2 text-sm font-medium" style={{ background: `linear-gradient(135deg, ${brandColors.primary}, ${brandColors.secondary})` }}>
-          <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
-            <Link to="/select-store" className="flex items-center space-x-2 hover:bg-white/20 px-3 py-1.5 rounded-full transition-colors group">
-              <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
-                <Store className="w-3.5 h-3.5" />
+        ) : (
+          <div className="text-white text-center py-2 text-sm font-medium" style={{ background: `linear-gradient(135deg, ${brandColors.primary}, ${brandColors.secondary})` }}>
+            <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
+              <Link to="/select-store" className="flex items-center space-x-2 hover:bg-white/20 px-3 py-1.5 rounded-full transition-colors group">
+                <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
+                  <Store className="w-3.5 h-3.5" />
+                </div>
+                <span className="hidden sm:inline font-semibold">RetailX</span>
+                <ChevronRight className="w-4 h-4 opacity-60 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+              <div className="flex items-center space-x-2">
+                {bakery ? (
+                  <>
+                    <span className="text-base mr-1">🧁</span>
+                    <span className="hidden sm:inline">
+                      Freshly baked daily — Order online & get <strong>15% OFF</strong>!
+                    </span>
+                    <span className="sm:hidden">15% OFF first order!</span>
+                  </>
+                ) : isServiceBased ? (
+                  <>
+                    <Calendar className="w-4 h-4" />
+                    <span className="hidden sm:inline">
+                      Book online & get <strong>10% OFF</strong> your first appointment!
+                    </span>
+                    <span className="sm:hidden">10% OFF first booking!</span>
+                  </>
+                ) : (
+                  <>
+                    <Truck className="w-4 h-4" />
+                    <span className="hidden sm:inline">Free shipping on orders over $50!</span>
+                    <span className="sm:hidden">Free shipping over $50!</span>
+                  </>
+                )}
               </div>
-              <span className="hidden sm:inline font-semibold">RetailX</span>
-              <ChevronRight className="w-4 h-4 opacity-60 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-            <div className="flex items-center space-x-2">
-              {bakery ? (
-                <>
-                  <span className="text-base mr-1">🧁</span>
-                  <span className="hidden sm:inline">
-                    Freshly baked daily — Order online & get <strong>15% OFF</strong>!
-                  </span>
-                  <span className="sm:hidden">15% OFF first order!</span>
-                </>
-              ) : isServiceBased ? (
-                <>
-                  <Calendar className="w-4 h-4" />
-                  <span className="hidden sm:inline">
-                    Book online & get <strong>10% OFF</strong> your first appointment!
-                  </span>
-                  <span className="sm:hidden">10% OFF first booking!</span>
-                </>
-              ) : (
-                <>
-                  <Truck className="w-4 h-4" />
-                  <span className="hidden sm:inline">Free shipping on orders over $50!</span>
-                  <span className="sm:hidden">Free shipping over $50!</span>
-                </>
-              )}
+              <Link to="/select-store" className="flex items-center space-x-2 hover:bg-white/20 px-3 py-1.5 rounded-full transition-colors">
+                <span className="text-xs font-medium">{store?.name || "Select Store"}</span>
+                <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
+                  <ChevronDown className="w-3 h-3" />
+                </div>
+              </Link>
             </div>
-            <Link to="/select-store" className="flex items-center space-x-2 hover:bg-white/20 px-3 py-1.5 rounded-full transition-colors">
-              <span className="text-xs font-medium">{store?.name || "Select Store"}</span>
-              <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
-                <ChevronDown className="w-3 h-3" />
-              </div>
-            </Link>
           </div>
-        </div>
-      )}
+        ))}
 
       {/* Header */}
       <header className={`bg-white sticky top-0 z-40 transition-all duration-300 ${scrolled ? "shadow-lg" : "border-b border-gray-100"}`}>
@@ -254,18 +277,22 @@ export default function Layout() {
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
 
-            {/* Logo */}
-            <Link to="/" className="flex items-center space-x-3 flex-shrink-0">
+            {/* Brand (logo + store name) */}
+            <Link to="/" className="flex items-center gap-3 flex-shrink-0 min-w-0">
               {store?.branding?.logo || store?.logo ? (
-                <img src={resolveImageUrl(store.branding?.logo || store.logo)} alt={store?.name} className="h-10 lg:h-12 w-auto" />
+                <div className="h-10 w-10 lg:h-12 lg:w-12 rounded-xl overflow-hidden border border-gray-100 bg-white shadow-sm flex items-center justify-center flex-shrink-0">
+                  <img src={resolveImageUrl(store.branding?.logo || store.logo)} alt={store?.name} className="h-full w-full object-cover" />
+                </div>
               ) : (
-                <div className="flex items-center space-x-2">
-                  <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${brandColors.primary}15` }}>
-                    <Store className="w-6 h-6 lg:w-7 lg:h-7" style={{ color: brandColors.primary }} />
-                  </div>
-                  <span className="text-xl lg:text-2xl font-bold text-gray-900 hidden sm:block">{store?.name || "Welcome"}</span>
+                <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${brandColors.primary}15` }}>
+                  <Store className="w-6 h-6 lg:w-7 lg:h-7" style={{ color: brandColors.primary }} />
                 </div>
               )}
+
+              <div className="hidden sm:block min-w-0">
+                <p className="text-base lg:text-lg font-bold text-gray-900 truncate leading-tight">{store?.name || "Cake Shop"}</p>
+                <p className="text-xs text-gray-500 truncate">{bakery ? "Freshly baked daily" : "Welcome"}</p>
+              </div>
             </Link>
 
             {/* Search Bar - Desktop */}
@@ -988,8 +1015,28 @@ export default function Layout() {
         </Link>
       )}
 
+      {/* Floating Store Switcher Icon (Desktop) */}
+      <Link
+        to="/select-store"
+        title="Switch Store"
+        aria-label="Switch Store"
+        className={`fixed top-4 right-4 z-30 hidden lg:flex items-center justify-center w-11 h-11 text-white rounded-full shadow-lg transition-all ${bakery ? "bg-amber-500 hover:bg-amber-600" : "bg-indigo-600 hover:bg-indigo-700"}`}
+      >
+        <Store className="w-5 h-5" />
+      </Link>
+
       {/* Scroll to Top Button */}
       <ScrollToTop />
+
+      {/* Keyboard Shortcut Hint Toast */}
+      {showKeyboardHint && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 bg-gray-900 text-white rounded-lg shadow-xl animate-fade-in-down">
+          <div className="flex items-center gap-2">
+            <Store className="w-5 h-5" />
+            <span className="font-medium">Switching stores...</span>
+          </div>
+        </div>
+      )}
 
       {/* Cart Drawer */}
       <CartDrawer />

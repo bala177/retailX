@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useStore } from "../context/StoreContext";
@@ -91,6 +91,12 @@ export default function ProductDetail() {
   });
 
   const apiReviews = reviewsData?.data?.data?.reviews || [];
+
+  const soldCount = useMemo(() => {
+    const key = String(product?._id || product?.slug || product?.name || "0");
+    const hash = key.split("").reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+    return 100 + (hash % 500);
+  }, [product?._id, product?.slug, product?.name]);
 
   // Reset state when product changes
   useEffect(() => {
@@ -266,6 +272,238 @@ export default function ProductDetail() {
             { name: "Emily L.", rating: 5, date: "3 weeks ago", comment: "Love it! Perfect for what I needed. Will definitely buy again.", helpful: 6 },
           ];
 
+  const renderProductTabs = () => (
+    <div className="border-t border-gray-100 pt-4">
+      <div className="flex space-x-1 bg-gray-50 overflow-x-auto rounded-t-xl px-2">
+        {[
+          { key: "description", label: "Description", icon: MessageSquare },
+          { key: "specifications", label: "Specifications", icon: Package },
+          { key: "reviews", label: `Reviews (${reviewCount || fakeReviews.length})`, icon: Star },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium rounded-t-xl transition-all whitespace-nowrap ${activeTab === tab.key ? "bg-white text-indigo-600 shadow-sm" : "text-gray-500 hover:text-gray-700 hover:bg-white/50"}`}
+          >
+            <tab.icon className="w-4 h-4" />
+            <span>{tab.label}</span>
+          </button>
+        ))}
+      </div>
+      <div className="p-4 lg:p-6 bg-white border border-gray-100 border-t-0 rounded-b-xl">
+        {activeTab === "description" && (
+          <div className="prose prose-gray max-w-none">
+            <p className="text-gray-600 leading-relaxed text-lg">{product.description || `Experience excellence with the ${product.name}. This premium product combines quality craftsmanship with modern design to deliver outstanding performance and value.`}</p>
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 bg-gray-50 rounded-xl">
+                <h4 className="font-semibold text-gray-900 mb-2">{isServiceBased ? "Service Highlights" : "Key Features"}</h4>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  {isServiceBased ? (
+                    <>
+                      <li className="flex items-center">
+                        <Check className="w-4 h-4 text-green-500 mr-2" /> Professional certified experts
+                      </li>
+                      <li className="flex items-center">
+                        <Check className="w-4 h-4 text-green-500 mr-2" /> Premium quality products used
+                      </li>
+                      <li className="flex items-center">
+                        <Check className="w-4 h-4 text-green-500 mr-2" /> Relaxing ambiance
+                      </li>
+                      <li className="flex items-center">
+                        <Check className="w-4 h-4 text-green-500 mr-2" /> Personalized experience
+                      </li>
+                    </>
+                  ) : (
+                    <>
+                      <li className="flex items-center">
+                        <Check className="w-4 h-4 text-green-500 mr-2" /> Premium quality materials
+                      </li>
+                      <li className="flex items-center">
+                        <Check className="w-4 h-4 text-green-500 mr-2" /> Modern and stylish design
+                      </li>
+                      <li className="flex items-center">
+                        <Check className="w-4 h-4 text-green-500 mr-2" /> Durable construction
+                      </li>
+                      <li className="flex items-center">
+                        <Check className="w-4 h-4 text-green-500 mr-2" /> Easy to use
+                      </li>
+                    </>
+                  )}
+                </ul>
+              </div>
+              <div className="p-4 bg-gray-50 rounded-xl">
+                <h4 className="font-semibold text-gray-900 mb-2">{isServiceBased ? "What to Expect" : "What's Included"}</h4>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  {isServiceBased ? (
+                    <>
+                      <li className="flex items-center">
+                        <Check className="w-4 h-4 text-green-500 mr-2" /> Consultation with specialist
+                      </li>
+                      <li className="flex items-center">
+                        <Check className="w-4 h-4 text-green-500 mr-2" /> {product.name} treatment
+                      </li>
+                      <li className="flex items-center">
+                        <Check className="w-4 h-4 text-green-500 mr-2" /> Post-service care tips
+                      </li>
+                      <li className="flex items-center">
+                        <Check className="w-4 h-4 text-green-500 mr-2" /> Follow-up recommendations
+                      </li>
+                    </>
+                  ) : (
+                    <>
+                      <li className="flex items-center">
+                        <Check className="w-4 h-4 text-green-500 mr-2" /> 1x {product.name}
+                      </li>
+                      <li className="flex items-center">
+                        <Check className="w-4 h-4 text-green-500 mr-2" /> User manual
+                      </li>
+                      <li className="flex items-center">
+                        <Check className="w-4 h-4 text-green-500 mr-2" /> Original packaging
+                      </li>
+                      <li className="flex items-center">
+                        <Check className="w-4 h-4 text-green-500 mr-2" /> Warranty card
+                      </li>
+                    </>
+                  )}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+        {activeTab === "specifications" && (
+          <div className="space-y-4">
+            {product.specifications?.length > 0 ? (
+              <div className="overflow-hidden rounded-xl border border-gray-200">
+                <table className="w-full">
+                  <tbody className="divide-y divide-gray-100">
+                    {product.specifications.map((spec, index) => (
+                      <tr key={index} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                        <td className="py-4 px-6 text-sm font-medium text-gray-700 w-1/3">{spec.key}</td>
+                        <td className="py-4 px-6 text-sm text-gray-900">{spec.value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-xl border border-gray-200">
+                <table className="w-full">
+                  <tbody className="divide-y divide-gray-100">
+                    <tr className="bg-gray-50">
+                      <td className="py-4 px-6 text-sm font-medium text-gray-700 w-1/3">{isServiceBased ? "Service ID" : "SKU"}</td>
+                      <td className="py-4 px-6 text-sm text-gray-900">{sku}</td>
+                    </tr>
+                    <tr className="bg-white">
+                      <td className="py-4 px-6 text-sm font-medium text-gray-700">Category</td>
+                      <td className="py-4 px-6 text-sm text-gray-900">{product.category?.name || "N/A"}</td>
+                    </tr>
+                    <tr className="bg-gray-50">
+                      <td className="py-4 px-6 text-sm font-medium text-gray-700">{isServiceBased ? "Provider" : "Brand"}</td>
+                      <td className="py-4 px-6 text-sm text-gray-900">{product.brand || terminology.storeName}</td>
+                    </tr>
+                    <tr className="bg-white">
+                      <td className="py-4 px-6 text-sm font-medium text-gray-700">Availability</td>
+                      <td className="py-4 px-6 text-sm text-gray-900">
+                        {isServiceBased ? (stockStatus === "in-stock" ? "Available" : stockStatus === "low-stock" ? "Limited Availability" : "Fully Booked") : stockStatus === "in-stock" ? "In Stock" : stockStatus === "low-stock" ? `Only ${stockQuantity} left` : "Out of Stock"}
+                      </td>
+                    </tr>
+                    {isServiceBased ? (
+                      <>
+                        <tr className="bg-gray-50">
+                          <td className="py-4 px-6 text-sm font-medium text-gray-700">Duration</td>
+                          <td className="py-4 px-6 text-sm text-gray-900">{product.duration || "Varies by service"}</td>
+                        </tr>
+                        <tr className="bg-white">
+                          <td className="py-4 px-6 text-sm font-medium text-gray-700">Booking Policy</td>
+                          <td className="py-4 px-6 text-sm text-gray-900">24-hour cancellation notice required</td>
+                        </tr>
+                      </>
+                    ) : (
+                      <>
+                        <tr className="bg-gray-50">
+                          <td className="py-4 px-6 text-sm font-medium text-gray-700">Shipping</td>
+                          <td className="py-4 px-6 text-sm text-gray-900">Free shipping on orders over $50</td>
+                        </tr>
+                        <tr className="bg-white">
+                          <td className="py-4 px-6 text-sm font-medium text-gray-700">Returns</td>
+                          <td className="py-4 px-6 text-sm text-gray-900">30-day return policy</td>
+                        </tr>
+                      </>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+        {activeTab === "reviews" && (
+          <div className="space-y-8">
+            <div className="flex flex-col md:flex-row gap-8 p-6 bg-gray-50 rounded-2xl">
+              <div className="text-center md:text-left">
+                <div className="text-5xl font-bold text-gray-900">{rating.toFixed(1)}</div>
+                <div className="mt-2">{renderStars(rating)}</div>
+                <p className="text-sm text-gray-500 mt-1">Based on {reviewCount || fakeReviews.length} reviews</p>
+              </div>
+              <div className="flex-1 space-y-2">
+                {[5, 4, 3, 2, 1].map((stars) => {
+                  const percentage = stars === 5 ? 65 : stars === 4 ? 25 : stars === 3 ? 7 : stars === 2 ? 2 : 1;
+                  return (
+                    <div key={stars} className="flex items-center space-x-3">
+                      <span className="text-sm text-gray-600 w-8">{stars}★</span>
+                      <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="h-full bg-yellow-400 rounded-full transition-all" style={{ width: `${percentage}%` }} />
+                      </div>
+                      <span className="text-sm text-gray-500 w-10">{percentage}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              {fakeReviews.map((review, index) => (
+                <div key={index} className="border-b border-gray-100 pb-6 last:border-0">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-semibold">{review.name.charAt(0)}</div>
+                      <div>
+                        <p className="font-medium text-gray-900">{review.name}</p>
+                        <div className="flex items-center space-x-2">
+                          <div className="flex">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className={`w-4 h-4 ${i < review.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} />
+                            ))}
+                          </div>
+                          <span className="text-xs text-gray-500">{review.date}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full flex items-center">
+                      <Check className="w-3 h-3 mr-1" />
+                      Verified Purchase
+                    </span>
+                  </div>
+                  <p className="mt-3 text-gray-600">{review.comment}</p>
+                  <div className="mt-3 flex items-center space-x-4">
+                    <button className="flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700">
+                      <ThumbsUp className="w-4 h-4" />
+                      <span>Helpful ({review.helpful})</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="text-center py-6 bg-gray-50 rounded-xl">
+              <p className="text-gray-600 mb-3">Have you used this product?</p>
+              <button className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-colors">Write a Review</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Breadcrumbs */}
@@ -310,7 +548,15 @@ export default function ProductDetail() {
                 }}
               >
                 {/* Base Image - Always visible */}
-                <img src={images[selectedImage]?.url} alt={product.name} className="w-full h-full object-contain pointer-events-none select-none" draggable="false" />
+                <img
+                  src={images[selectedImage]?.url}
+                  alt={product.name}
+                  className="w-full h-full object-contain pointer-events-none select-none"
+                  draggable="false"
+                  onError={(e) => {
+                    e.target.src = "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600";
+                  }}
+                />
 
                 {/* Magnifying Lens - Square with rounded corners */}
                 {showZoomLens && (
@@ -369,6 +615,9 @@ export default function ProductDetail() {
                   ))}
                 </div>
               )}
+
+              {/* Product details tabs - under product image/thumbnail area */}
+              <div className="mt-6">{renderProductTabs()}</div>
             </div>
 
             {/* Product Info */}
@@ -436,7 +685,7 @@ export default function ProductDetail() {
                   {reviewCount} Reviews
                 </button>
                 <span className="text-gray-300">|</span>
-                <span className="text-sm text-gray-500">{Math.floor(Math.random() * 500) + 100} sold</span>
+                <span className="text-sm text-gray-500">{soldCount} sold</span>
               </div>
 
               {/* Price */}
@@ -738,236 +987,6 @@ export default function ProductDetail() {
                   </div>
                 )}
               </div>
-            </div>
-          </div>
-
-          {/* Tabs */}
-          <div className="border-t border-gray-100">
-            <div className="flex space-x-1 px-6 lg:px-8 pt-2 bg-gray-50 overflow-x-auto">
-              {[
-                { key: "description", label: "Description", icon: MessageSquare },
-                { key: "specifications", label: "Specifications", icon: Package },
-                { key: "reviews", label: `Reviews (${reviewCount || fakeReviews.length})`, icon: Star },
-              ].map((tab) => (
-                <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`flex items-center space-x-2 px-5 py-4 text-sm font-medium rounded-t-xl transition-all ${activeTab === tab.key ? "bg-white text-indigo-600 shadow-sm" : "text-gray-500 hover:text-gray-700 hover:bg-white/50"}`}>
-                  <tab.icon className="w-4 h-4" />
-                  <span>{tab.label}</span>
-                </button>
-              ))}
-            </div>
-            <div className="p-6 lg:p-8 bg-white">
-              {activeTab === "description" && (
-                <div className="prose prose-gray max-w-none">
-                  <p className="text-gray-600 leading-relaxed text-lg">{product.description || `Experience excellence with the ${product.name}. This premium product combines quality craftsmanship with modern design to deliver outstanding performance and value.`}</p>
-                  <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 bg-gray-50 rounded-xl">
-                      <h4 className="font-semibold text-gray-900 mb-2">{isServiceBased ? "Service Highlights" : "Key Features"}</h4>
-                      <ul className="space-y-2 text-sm text-gray-600">
-                        {isServiceBased ? (
-                          <>
-                            <li className="flex items-center">
-                              <Check className="w-4 h-4 text-green-500 mr-2" /> Professional certified experts
-                            </li>
-                            <li className="flex items-center">
-                              <Check className="w-4 h-4 text-green-500 mr-2" /> Premium quality products used
-                            </li>
-                            <li className="flex items-center">
-                              <Check className="w-4 h-4 text-green-500 mr-2" /> Relaxing ambiance
-                            </li>
-                            <li className="flex items-center">
-                              <Check className="w-4 h-4 text-green-500 mr-2" /> Personalized experience
-                            </li>
-                          </>
-                        ) : (
-                          <>
-                            <li className="flex items-center">
-                              <Check className="w-4 h-4 text-green-500 mr-2" /> Premium quality materials
-                            </li>
-                            <li className="flex items-center">
-                              <Check className="w-4 h-4 text-green-500 mr-2" /> Modern and stylish design
-                            </li>
-                            <li className="flex items-center">
-                              <Check className="w-4 h-4 text-green-500 mr-2" /> Durable construction
-                            </li>
-                            <li className="flex items-center">
-                              <Check className="w-4 h-4 text-green-500 mr-2" /> Easy to use
-                            </li>
-                          </>
-                        )}
-                      </ul>
-                    </div>
-                    <div className="p-4 bg-gray-50 rounded-xl">
-                      <h4 className="font-semibold text-gray-900 mb-2">{isServiceBased ? "What to Expect" : "What's Included"}</h4>
-                      <ul className="space-y-2 text-sm text-gray-600">
-                        {isServiceBased ? (
-                          <>
-                            <li className="flex items-center">
-                              <Check className="w-4 h-4 text-green-500 mr-2" /> Consultation with specialist
-                            </li>
-                            <li className="flex items-center">
-                              <Check className="w-4 h-4 text-green-500 mr-2" /> {product.name} treatment
-                            </li>
-                            <li className="flex items-center">
-                              <Check className="w-4 h-4 text-green-500 mr-2" /> Post-service care tips
-                            </li>
-                            <li className="flex items-center">
-                              <Check className="w-4 h-4 text-green-500 mr-2" /> Follow-up recommendations
-                            </li>
-                          </>
-                        ) : (
-                          <>
-                            <li className="flex items-center">
-                              <Check className="w-4 h-4 text-green-500 mr-2" /> 1x {product.name}
-                            </li>
-                            <li className="flex items-center">
-                              <Check className="w-4 h-4 text-green-500 mr-2" /> User manual
-                            </li>
-                            <li className="flex items-center">
-                              <Check className="w-4 h-4 text-green-500 mr-2" /> Original packaging
-                            </li>
-                            <li className="flex items-center">
-                              <Check className="w-4 h-4 text-green-500 mr-2" /> Warranty card
-                            </li>
-                          </>
-                        )}
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {activeTab === "specifications" && (
-                <div className="space-y-4">
-                  {product.specifications?.length > 0 ? (
-                    <div className="overflow-hidden rounded-xl border border-gray-200">
-                      <table className="w-full">
-                        <tbody className="divide-y divide-gray-100">
-                          {product.specifications.map((spec, index) => (
-                            <tr key={index} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                              <td className="py-4 px-6 text-sm font-medium text-gray-700 w-1/3">{spec.key}</td>
-                              <td className="py-4 px-6 text-sm text-gray-900">{spec.value}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="overflow-hidden rounded-xl border border-gray-200">
-                      <table className="w-full">
-                        <tbody className="divide-y divide-gray-100">
-                          <tr className="bg-gray-50">
-                            <td className="py-4 px-6 text-sm font-medium text-gray-700 w-1/3">{isServiceBased ? "Service ID" : "SKU"}</td>
-                            <td className="py-4 px-6 text-sm text-gray-900">{sku}</td>
-                          </tr>
-                          <tr className="bg-white">
-                            <td className="py-4 px-6 text-sm font-medium text-gray-700">Category</td>
-                            <td className="py-4 px-6 text-sm text-gray-900">{product.category?.name || "N/A"}</td>
-                          </tr>
-                          <tr className="bg-gray-50">
-                            <td className="py-4 px-6 text-sm font-medium text-gray-700">{isServiceBased ? "Provider" : "Brand"}</td>
-                            <td className="py-4 px-6 text-sm text-gray-900">{product.brand || terminology.storeName}</td>
-                          </tr>
-                          <tr className="bg-white">
-                            <td className="py-4 px-6 text-sm font-medium text-gray-700">Availability</td>
-                            <td className="py-4 px-6 text-sm text-gray-900">
-                              {isServiceBased ? (stockStatus === "in-stock" ? "Available" : stockStatus === "low-stock" ? "Limited Availability" : "Fully Booked") : stockStatus === "in-stock" ? "In Stock" : stockStatus === "low-stock" ? `Only ${stockQuantity} left` : "Out of Stock"}
-                            </td>
-                          </tr>
-                          {isServiceBased ? (
-                            <>
-                              <tr className="bg-gray-50">
-                                <td className="py-4 px-6 text-sm font-medium text-gray-700">Duration</td>
-                                <td className="py-4 px-6 text-sm text-gray-900">{product.duration || "Varies by service"}</td>
-                              </tr>
-                              <tr className="bg-white">
-                                <td className="py-4 px-6 text-sm font-medium text-gray-700">Booking Policy</td>
-                                <td className="py-4 px-6 text-sm text-gray-900">24-hour cancellation notice required</td>
-                              </tr>
-                            </>
-                          ) : (
-                            <>
-                              <tr className="bg-gray-50">
-                                <td className="py-4 px-6 text-sm font-medium text-gray-700">Shipping</td>
-                                <td className="py-4 px-6 text-sm text-gray-900">Free shipping on orders over $50</td>
-                              </tr>
-                              <tr className="bg-white">
-                                <td className="py-4 px-6 text-sm font-medium text-gray-700">Returns</td>
-                                <td className="py-4 px-6 text-sm text-gray-900">30-day return policy</td>
-                              </tr>
-                            </>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              )}
-              {activeTab === "reviews" && (
-                <div className="space-y-8">
-                  {/* Review Summary */}
-                  <div className="flex flex-col md:flex-row gap-8 p-6 bg-gray-50 rounded-2xl">
-                    <div className="text-center md:text-left">
-                      <div className="text-5xl font-bold text-gray-900">{rating.toFixed(1)}</div>
-                      <div className="mt-2">{renderStars(rating)}</div>
-                      <p className="text-sm text-gray-500 mt-1">Based on {reviewCount || fakeReviews.length} reviews</p>
-                    </div>
-                    <div className="flex-1 space-y-2">
-                      {[5, 4, 3, 2, 1].map((stars) => {
-                        const percentage = stars === 5 ? 65 : stars === 4 ? 25 : stars === 3 ? 7 : stars === 2 ? 2 : 1;
-                        return (
-                          <div key={stars} className="flex items-center space-x-3">
-                            <span className="text-sm text-gray-600 w-8">{stars}★</span>
-                            <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                              <div className="h-full bg-yellow-400 rounded-full transition-all" style={{ width: `${percentage}%` }} />
-                            </div>
-                            <span className="text-sm text-gray-500 w-10">{percentage}%</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Review List */}
-                  <div className="space-y-6">
-                    {fakeReviews.map((review, index) => (
-                      <div key={index} className="border-b border-gray-100 pb-6 last:border-0">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-semibold">{review.name.charAt(0)}</div>
-                            <div>
-                              <p className="font-medium text-gray-900">{review.name}</p>
-                              <div className="flex items-center space-x-2">
-                                <div className="flex">
-                                  {[...Array(5)].map((_, i) => (
-                                    <Star key={i} className={`w-4 h-4 ${i < review.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} />
-                                  ))}
-                                </div>
-                                <span className="text-xs text-gray-500">{review.date}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full flex items-center">
-                            <Check className="w-3 h-3 mr-1" />
-                            Verified Purchase
-                          </span>
-                        </div>
-                        <p className="mt-3 text-gray-600">{review.comment}</p>
-                        <div className="mt-3 flex items-center space-x-4">
-                          <button className="flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700">
-                            <ThumbsUp className="w-4 h-4" />
-                            <span>Helpful ({review.helpful})</span>
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Write Review CTA */}
-                  <div className="text-center py-6 bg-gray-50 rounded-xl">
-                    <p className="text-gray-600 mb-3">Have you used this product?</p>
-                    <button className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-colors">Write a Review</button>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>

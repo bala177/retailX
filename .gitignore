@@ -31,5 +31,5 @@ yarn-debug.log*
 yarn-error.log*
 .pids/
 
-# Database exports
-backend/db_export/
+# Database exports (tracked for deployment sync)
+# backend/db_export/
