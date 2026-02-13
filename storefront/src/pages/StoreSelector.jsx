@@ -69,11 +69,7 @@ export default function StoreSelector() {
 
       setIsWakingUp(false);
       setLoading(false);
-      setError(
-        isNetworkError
-          ? "Server is starting up. Please wait a moment and try again."
-          : "Failed to load stores. Please try again."
-      );
+      setError(isNetworkError ? "Server is starting up. Please wait a moment and try again." : "Failed to load stores. Please try again.");
     } finally {
       // Loading is cleared in success/error paths above
     }
@@ -156,9 +152,7 @@ export default function StoreSelector() {
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 className="w-12 h-12 text-indigo-500 animate-spin mb-4" />
             <p className="text-gray-400">{isWakingUp ? "Server is waking up, please wait..." : "Loading stores..."}</p>
-            {isWakingUp && (
-              <p className="text-gray-500 text-sm mt-2">This may take up to 30 seconds on first visit</p>
-            )}
+            {isWakingUp && <p className="text-gray-500 text-sm mt-2">This may take up to 30 seconds on first visit</p>}
           </div>
         )}
 

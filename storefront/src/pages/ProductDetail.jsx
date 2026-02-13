@@ -7,7 +7,10 @@ import { productsAPI, reviewsAPI, resolveImageUrl } from "../services/api";
 import ProductCard from "../components/ProductCard";
 import ServiceCard from "../components/ServiceCard";
 import BookingModal from "../components/BookingModal";
-import { Minus, Plus, ShoppingCart, Heart, Share2, Truck, Shield, RefreshCw, ChevronRight, Star, Check, Home, ZoomIn, X, ChevronLeft, Package, Award, Clock, ThumbsUp, MessageSquare, Copy, Facebook, Twitter, Mail, Calendar, BadgeCheck, Sparkles } from "lucide-react";
+import CakeCustomizer from "../components/CakeCustomizer";
+import DeliveryScheduler from "../components/DeliveryScheduler";
+import CapacityIndicator from "../components/CapacityIndicator";
+import { Minus, Plus, ShoppingCart, Heart, Share2, Truck, Shield, RefreshCw, ChevronRight, Star, Check, Home, ZoomIn, X, ChevronLeft, Package, Award, Clock, ThumbsUp, MessageSquare, Copy, Facebook, Twitter, Mail, Calendar, BadgeCheck, Sparkles, Cake } from "lucide-react";
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -27,6 +30,33 @@ export default function ProductDetail() {
   const [zoomBoxPosition, setZoomBoxPosition] = useState({ x: 0, y: 0 });
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [selectedRelatedService, setSelectedRelatedService] = useState(null);
+
+  // Bakery detection
+  const isBakeryStore = () => {
+    const slug = (storeSlug || "").toLowerCase();
+    const name = (store?.name || "").toLowerCase();
+    const combined = slug + " " + name;
+    return (
+      combined.includes("bake") ||
+      combined.includes("bakery") ||
+      combined.includes("cake") ||
+      combined.includes("sweet") ||
+      combined.includes("pastry") ||
+      combined.includes("patisserie") ||
+      combined.includes("confection") ||
+      combined.includes("cupcake") ||
+      combined.includes("dessert") ||
+      combined.includes("cookie") ||
+      combined.includes("donut") ||
+      combined.includes("chocolate")
+    );
+  };
+  const bakery = isBakeryStore();
+
+  // Bakery customization state
+  const [customization, setCustomization] = useState(null);
+  const [deliveryInfo, setDeliveryInfo] = useState(null);
+  const [showCustomizer, setShowCustomizer] = useState(bakery);
 
   // Fetch product
   const {
@@ -141,7 +171,15 @@ export default function ProductDetail() {
   const sku = product.inventory?.sku || product.sku || "N/A";
 
   const handleAddToCart = () => {
-    addItem(product, quantity);
+    if (bakery && customization) {
+      // Bakery customized order
+      addItem(product, quantity, null, {
+        customization,
+        delivery: deliveryInfo,
+      });
+    } else {
+      addItem(product, quantity);
+    }
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
   };
@@ -456,7 +494,21 @@ export default function ProductDetail() {
               {/* Quantity & Add to Cart */}
               {stockStatus !== "out-of-stock" && (
                 <div className="space-y-4">
-                  {!isServiceBased && (
+                  {/* Bakery Customization Panel */}
+                  {bakery && showCustomizer && (
+                    <div className="space-y-6 border-t border-amber-100 pt-6">
+                      {/* Capacity Indicator */}
+                      <CapacityIndicator productId={product._id} productName={product.name} />
+
+                      {/* Cake Customizer */}
+                      <CakeCustomizer basePrice={currentPrice} currencySymbol={store?.settings?.currencySymbol || "$"} onCustomizationChange={setCustomization} />
+
+                      {/* Delivery Scheduler */}
+                      <DeliveryScheduler prepTimeHours={customization?.prepTime || 12} currencySymbol={store?.settings?.currencySymbol || "$"} onDeliveryChange={setDeliveryInfo} />
+                    </div>
+                  )}
+
+                  {!isServiceBased && !bakery && (
                     <div className="flex items-center space-x-4">
                       <span className="text-sm font-medium text-gray-700">Quantity:</span>
                       <div className="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden">
@@ -483,6 +535,34 @@ export default function ProductDetail() {
                         <button onClick={handleAddToCart} disabled={addedToCart} className={`px-6 py-4 border-2 rounded-xl font-semibold transition-colors ${addedToCart ? "bg-green-500 text-white border-green-500" : "border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"}`}>
                           {addedToCart ? <Check className="w-6 h-6" /> : <Heart className="w-6 h-6" />}
                         </button>
+                      </>
+                    ) : bakery ? (
+                      // Bakery: Show Customize & Order button
+                      <>
+                        <button
+                          onClick={handleAddToCart}
+                          disabled={addedToCart || (showCustomizer && !customization?.flavor)}
+                          className={`flex-1 flex items-center justify-center space-x-3 px-8 py-4 rounded-2xl font-bold text-lg transition-all transform hover:scale-[1.02] shadow-lg ${
+                            addedToCart ? "bg-green-500 text-white shadow-green-200" : "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 shadow-amber-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                          }`}
+                        >
+                          {addedToCart ? (
+                            <>
+                              <Check className="w-6 h-6" />
+                              <span>Added to Cart!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Cake className="w-6 h-6" />
+                              <span>{showCustomizer ? "Add to Cart" : "Customize & Order"}</span>
+                            </>
+                          )}
+                        </button>
+                        {!showCustomizer && (
+                          <button onClick={() => setShowCustomizer(true)} className="px-6 py-4 border-2 border-amber-300 rounded-2xl font-semibold text-amber-700 hover:bg-amber-50 transition-colors">
+                            <Sparkles className="w-6 h-6" />
+                          </button>
+                        )}
                       </>
                     ) : (
                       // Retail: Show Add to Cart button
@@ -520,9 +600,48 @@ export default function ProductDetail() {
                 </div>
               )}
 
-              {/* Trust Features - Different for services vs products */}
+              {/* Trust Features - Different for services vs products vs bakery */}
               <div className="border-t border-gray-100 pt-6 grid grid-cols-2 gap-4">
-                {isServiceBased ? (
+                {bakery ? (
+                  <>
+                    <div className="flex items-center space-x-3 p-3 bg-amber-50 rounded-xl">
+                      <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                        <Clock className="w-5 h-5 text-amber-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">Baked Fresh</p>
+                        <p className="text-xs text-gray-500">Made to order daily</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-3 p-3 bg-amber-50 rounded-xl">
+                      <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                        <Truck className="w-5 h-5 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">Same Day Delivery</p>
+                        <p className="text-xs text-gray-500">Order before 10 AM</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-3 p-3 bg-amber-50 rounded-xl">
+                      <div className="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center">
+                        <Award className="w-5 h-5 text-rose-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">100% Eggless</p>
+                        <p className="text-xs text-gray-500">Options available</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-3 p-3 bg-amber-50 rounded-xl">
+                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <Shield className="w-5 h-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">FSSAI Certified</p>
+                        <p className="text-xs text-gray-500">Food safety assured</p>
+                      </div>
+                    </div>
+                  </>
+                ) : isServiceBased ? (
                   <>
                     <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl">
                       <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">

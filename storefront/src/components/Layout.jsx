@@ -26,6 +26,28 @@ export default function Layout() {
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterLoading, setNewsletterLoading] = useState(false);
 
+  // Detect bakery/cake shop
+  const isBakeryStore = () => {
+    const slug = (storeSlug || "").toLowerCase();
+    const name = (store?.name || "").toLowerCase();
+    const combined = slug + " " + name;
+    return (
+      combined.includes("bake") ||
+      combined.includes("bakery") ||
+      combined.includes("cake") ||
+      combined.includes("sweet") ||
+      combined.includes("pastry") ||
+      combined.includes("patisserie") ||
+      combined.includes("confection") ||
+      combined.includes("cupcake") ||
+      combined.includes("dessert") ||
+      combined.includes("cookie") ||
+      combined.includes("donut") ||
+      combined.includes("chocolate")
+    );
+  };
+  const bakery = isBakeryStore();
+
   // Track scroll for header styling and active section detection
   useEffect(() => {
     const handleScroll = () => {
@@ -135,20 +157,20 @@ export default function Layout() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
+      <div className={`min-h-screen flex items-center justify-center ${bakery ? "bg-gradient-to-br from-amber-50 to-orange-50" : "bg-gradient-to-br from-indigo-50 to-purple-50"}`}>
         <div className="text-center">
           <div className="relative">
-            <div className="w-20 h-20 border-4 border-indigo-200 rounded-full animate-spin border-t-indigo-600 mx-auto"></div>
-            <Store className="w-8 h-8 text-indigo-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+            <div className={`w-20 h-20 border-4 rounded-full animate-spin mx-auto ${bakery ? "border-amber-200 border-t-amber-600" : "border-indigo-200 border-t-indigo-600"}`}></div>
+            <Store className={`w-8 h-8 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${bakery ? "text-amber-600" : "text-indigo-600"}`} />
           </div>
-          <p className="mt-6 text-gray-600 font-medium">Loading your store...</p>
+          <p className="mt-6 text-gray-600 font-medium">{bakery ? "Warming up the oven..." : "Loading your store..."}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className={`min-h-screen flex flex-col ${bakery ? "bg-amber-50/30 bakery-theme" : "bg-gray-50"}`}>
       {/* Top Banner with Store Switcher & RetailX Branding */}
       {store?.promoBanner?.enabled ? (
         <div className="text-center py-2 text-sm font-medium" style={{ backgroundColor: store.promoBanner.backgroundColor || brandColors.primary, color: store.promoBanner.textColor || "#FFFFFF" }}>
@@ -188,7 +210,15 @@ export default function Layout() {
               <ChevronRight className="w-4 h-4 opacity-60 group-hover:translate-x-0.5 transition-transform" />
             </Link>
             <div className="flex items-center space-x-2">
-              {isServiceBased ? (
+              {bakery ? (
+                <>
+                  <span className="text-base mr-1">🧁</span>
+                  <span className="hidden sm:inline">
+                    Freshly baked daily — Order online & get <strong>15% OFF</strong>!
+                  </span>
+                  <span className="sm:hidden">15% OFF first order!</span>
+                </>
+              ) : isServiceBased ? (
                 <>
                   <Calendar className="w-4 h-4" />
                   <span className="hidden sm:inline">
@@ -216,46 +246,6 @@ export default function Layout() {
 
       {/* Header */}
       <header className={`bg-white sticky top-0 z-40 transition-all duration-300 ${scrolled ? "shadow-lg" : "border-b border-gray-100"}`}>
-        {/* Top Header Bar - Desktop Only */}
-        <div className="hidden lg:block border-b border-gray-100">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-10 text-sm">
-              <div className="flex items-center space-x-6 text-gray-500">
-                {(store?.contact?.phone || store?.contactPhone) && (
-                  <a href={`tel:${store?.contact?.phone || store?.contactPhone}`} className="flex items-center space-x-1 hover:text-gray-700">
-                    <Phone className="w-3.5 h-3.5" />
-                    <span>{store?.contact?.phone || store?.contactPhone}</span>
-                  </a>
-                )}
-                {(store?.contact?.email || store?.contactEmail) && (
-                  <a href={`mailto:${store?.contact?.email || store?.contactEmail}`} className="flex items-center space-x-1 hover:text-gray-700">
-                    <Mail className="w-3.5 h-3.5" />
-                    <span>{store?.contact?.email || store?.contactEmail}</span>
-                  </a>
-                )}
-              </div>
-              <div className="flex items-center space-x-4">
-                <Link to="/select-store" className="flex items-center space-x-1.5 text-indigo-600 hover:text-indigo-700 font-medium">
-                  <Store className="w-3.5 h-3.5" />
-                  <span>All Stores</span>
-                </Link>
-                {!isServiceBased && (
-                  <>
-                    <span className="text-gray-300">|</span>
-                    <a href="#" className="text-gray-500 hover:text-gray-700">
-                      Track Order
-                    </a>
-                  </>
-                )}
-                <span className="text-gray-300">|</span>
-                <a href="#" className="text-gray-500 hover:text-gray-700">
-                  Help
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Main Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
@@ -433,7 +423,7 @@ export default function Layout() {
               // E-commerce navigation
               <>
                 <Link to="/products" className={`px-4 py-2 font-medium rounded-lg transition-all text-sm ${location.pathname === "/products" && !location.search ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"}`}>
-                  {terminology?.allProducts || "All Products"}
+                  {bakery ? "Our Menu" : terminology?.allProducts || "All Products"}
                 </Link>
 
                 {/* Categories Dropdown */}
@@ -469,19 +459,6 @@ export default function Layout() {
                     </div>
                   )}
                 </div>
-
-                <Link to="/products?featured=true" className={`px-4 py-2 font-medium rounded-lg transition-all text-sm ${location.search.includes("featured=true") ? "bg-amber-500 text-white" : "text-gray-600 hover:text-amber-600 hover:bg-amber-50"}`}>
-                  {terminology?.featured || "Featured"}
-                </Link>
-                <Link to="/products?sale=true" className={`px-4 py-2 font-medium rounded-lg transition-all text-sm flex items-center ${location.search.includes("sale=true") ? "bg-red-500 text-white" : "text-red-600 hover:bg-red-50"}`}>
-                  Sale
-                </Link>
-                <Link
-                  to="/products?sort=-createdAt"
-                  className={`px-4 py-2 font-medium rounded-lg transition-all text-sm ${location.search.includes("sort=-createdAt") && !location.search.includes("featured") && !location.search.includes("sale") ? "bg-emerald-500 text-white" : "text-gray-600 hover:text-emerald-600 hover:bg-emerald-50"}`}
-                >
-                  New Arrivals
-                </Link>
               </>
             )}
           </nav>
@@ -574,13 +551,7 @@ export default function Layout() {
                   // E-commerce mobile menu
                   <>
                     <Link to="/products" onClick={() => setMobileMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-xl font-medium ${location.pathname === "/products" && !location.search ? "bg-indigo-50 text-indigo-700" : "text-gray-700 hover:bg-gray-50"}`}>
-                      🛍️ Shop All
-                    </Link>
-                    <Link to="/products?featured=true" onClick={() => setMobileMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-xl font-medium ${location.search.includes("featured=true") ? "bg-amber-50 text-amber-700" : "text-gray-700 hover:bg-gray-50"}`}>
-                      ⭐ Featured
-                    </Link>
-                    <Link to="/products?sale=true" onClick={() => setMobileMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-xl font-medium ${location.search.includes("sale=true") ? "bg-red-50 text-red-700" : "text-red-600 hover:bg-red-50"}`}>
-                      🏷️ Sale
+                      {bakery ? "🧁 Our Menu" : "🛍️ Shop All"}
                     </Link>
 
                     <div className="pt-4 pb-2">
@@ -996,13 +967,13 @@ export default function Layout() {
                 © {new Date().getFullYear()} {store?.name}. All rights reserved.
               </p>
               <div className="flex items-center gap-4">
-                <Link to="/select-store" className="text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
+                <Link to="/select-store" className={`text-sm flex items-center gap-1 ${bakery ? "text-amber-400 hover:text-amber-300" : "text-indigo-400 hover:text-indigo-300"}`}>
                   <Store className="w-4 h-4" />
                   Browse All Stores
                 </Link>
                 <span className="text-gray-600">•</span>
                 <p className="text-sm text-gray-600">
-                  Powered by <span className="font-semibold text-indigo-400">RetailX</span>
+                  Powered by <span className={`font-semibold ${bakery ? "text-amber-400" : "text-indigo-400"}`}>RetailX</span>
                 </p>
               </div>
             </div>
@@ -1012,7 +983,7 @@ export default function Layout() {
 
       {/* Floating Store Switcher Button (Mobile) */}
       {scrolled && (
-        <Link to="/select-store" className="fixed bottom-20 right-4 z-30 lg:hidden p-3 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition-all animate-bounce-once" style={{ animationIterationCount: 3 }}>
+        <Link to="/select-store" className={`fixed bottom-20 right-4 z-30 lg:hidden p-3 text-white rounded-full shadow-lg transition-all animate-bounce-once ${bakery ? "bg-amber-600 hover:bg-amber-700" : "bg-indigo-600 hover:bg-indigo-700"}`} style={{ animationIterationCount: 3 }}>
           <Store className="w-5 h-5" />
         </Link>
       )}

@@ -1,15 +1,36 @@
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useStore } from "../context/StoreContext";
-import { X, Plus, Minus, ShoppingBag, Trash2, Tag, Truck, Shield, ArrowRight, Sparkles, Clock, Calendar } from "lucide-react";
+import { X, Plus, Minus, ShoppingBag, Trash2, Tag, Truck, Shield, ArrowRight, Sparkles, Clock, Calendar, Cake, MapPin, Package } from "lucide-react";
 
 export default function CartDrawer() {
-  const { items, isOpen, closeCart, updateQuantity, removeItem, subtotal, itemCount } = useCart();
-  const { store, terminology, isServiceBased } = useStore();
+  const { items, isOpen, closeCart, updateQuantity, removeItem, subtotal, itemCount, deliveryInfo, deliveryFee, taxAmount, grandTotal, hasCustomizedItems } = useCart();
+  const { store, terminology, isServiceBased, storeSlug } = useStore();
+
+  // Bakery detection
+  const isBakeryStore = (() => {
+    const slug = (storeSlug || "").toLowerCase();
+    const name = (store?.name || "").toLowerCase();
+    const combined = slug + " " + name;
+    return (
+      combined.includes("bake") ||
+      combined.includes("bakery") ||
+      combined.includes("cake") ||
+      combined.includes("sweet") ||
+      combined.includes("pastry") ||
+      combined.includes("patisserie") ||
+      combined.includes("confection") ||
+      combined.includes("cupcake") ||
+      combined.includes("dessert") ||
+      combined.includes("cookie") ||
+      combined.includes("donut") ||
+      combined.includes("chocolate")
+    );
+  })();
 
   const brandColors = {
-    primary: store?.branding?.primaryColor || "#6366f1",
-    secondary: store?.branding?.secondaryColor || "#4f46e5",
+    primary: isBakeryStore ? "#d97706" : store?.branding?.primaryColor || "#6366f1",
+    secondary: isBakeryStore ? "#ea580c" : store?.branding?.secondaryColor || "#4f46e5",
   };
 
   // Dynamic free shipping threshold from store settings
@@ -98,6 +119,26 @@ export default function CartDrawer() {
                     </Link>
                     {item.variant && <p className="text-xs text-gray-500 mt-1">{item.variant}</p>}
 
+                    {/* Bakery Customization Details */}
+                    {item.customization && (
+                      <div className="mt-2 text-xs space-y-1 bg-amber-50 rounded-lg p-2 border border-amber-100">
+                        {item.customization.sizeLabel && (
+                          <p className="flex items-center text-amber-800">
+                            <Cake className="w-3 h-3 mr-1.5 text-amber-500" />
+                            {item.customization.sizeLabel}
+                          </p>
+                        )}
+                        {item.customization.flavorLabel && (
+                          <p className="flex items-center text-amber-800">
+                            <Sparkles className="w-3 h-3 mr-1.5 text-amber-500" />
+                            {item.customization.flavorLabel}
+                          </p>
+                        )}
+                        {item.customization.message && <p className="flex items-center text-purple-700 italic">💬 "{item.customization.message}"</p>}
+                        {item.customization.customImage && <p className="flex items-center text-blue-700">📷 Photo cake</p>}
+                      </div>
+                    )}
+
                     {/* Booking Details */}
                     {item.bookingDetails && (
                       <div className="mt-2 text-xs text-gray-600 space-y-1 bg-gray-50 rounded-lg p-2">
@@ -182,6 +223,35 @@ export default function CartDrawer() {
               </span>
             </div>
 
+            {/* Delivery Info for Bakery */}
+            {isBakeryStore && deliveryInfo && (
+              <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 space-y-1.5">
+                <p className="text-xs font-semibold text-emerald-800 flex items-center">
+                  {deliveryInfo.type === "pickup" ? (
+                    <>
+                      <Package className="w-3.5 h-3.5 mr-1.5" /> Store Pickup
+                    </>
+                  ) : (
+                    <>
+                      <Truck className="w-3.5 h-3.5 mr-1.5" /> {deliveryInfo.typeLabel || "Delivery"}
+                    </>
+                  )}
+                </p>
+                {deliveryInfo.dateFormatted && (
+                  <p className="text-xs text-gray-600 flex items-center">
+                    <Calendar className="w-3 h-3 mr-1.5 text-gray-400" />
+                    {deliveryInfo.dateFormatted}
+                  </p>
+                )}
+                {deliveryInfo.slotTime && (
+                  <p className="text-xs text-gray-600 flex items-center">
+                    <Clock className="w-3 h-3 mr-1.5 text-gray-400" />
+                    {deliveryInfo.slotTime}
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Subtotal */}
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm text-gray-500">
@@ -191,16 +261,37 @@ export default function CartDrawer() {
                   {subtotal.toFixed(2)}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-lg font-bold text-gray-900">Estimated Total</span>
+
+              {/* Bakery: Delivery fee & Tax breakdown */}
+              {isBakeryStore && hasCustomizedItems && (
+                <>
+                  <div className="flex items-center justify-between text-sm text-gray-500">
+                    <span className="flex items-center">
+                      <Truck className="w-3.5 h-3.5 mr-1.5" />
+                      Delivery Fee
+                    </span>
+                    <span className={deliveryFee === 0 ? "text-emerald-600 font-medium" : "text-gray-900 font-medium"}>{deliveryFee === 0 ? "FREE" : `${currencySymbol}${deliveryFee.toFixed(2)}`}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm text-gray-500">
+                    <span>Tax (est.)</span>
+                    <span className="text-gray-900 font-medium">
+                      {currencySymbol}
+                      {taxAmount.toFixed(2)}
+                    </span>
+                  </div>
+                </>
+              )}
+
+              <div className="flex items-center justify-between pt-1 border-t border-gray-100">
+                <span className="text-lg font-bold text-gray-900">{isBakeryStore && hasCustomizedItems ? "Grand Total" : "Estimated Total"}</span>
                 <span className="text-xl font-bold" style={{ color: brandColors.primary }}>
                   {currencySymbol}
-                  {subtotal.toFixed(2)}
+                  {isBakeryStore && hasCustomizedItems ? grandTotal.toFixed(2) : subtotal.toFixed(2)}
                 </span>
               </div>
               <p className="text-xs text-gray-500 flex items-center">
                 <Clock className="w-3 h-3 mr-1" />
-                {isServiceBased ? "Final confirmation at checkout" : "Shipping & taxes calculated at checkout"}
+                {isServiceBased ? "Final confirmation at checkout" : isBakeryStore ? "Inclusive of all charges" : "Shipping & taxes calculated at checkout"}
               </p>
             </div>
 

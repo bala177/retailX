@@ -1,17 +1,38 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useStore } from "../context/StoreContext";
 import { resolveImageUrl } from "../services/api";
-import { ShoppingCart, Eye, Heart, Star, Check, Truck, Calendar, Clock } from "lucide-react";
+import { ShoppingCart, Eye, Heart, Star, Check, Truck, Calendar, Clock, Cake } from "lucide-react";
 import { useState } from "react";
 
 export default function ProductCard({ product, showSaleBadge, showNewBadge }) {
   const { addItem } = useCart();
-  const { terminology, isServiceBased } = useStore();
+  const { terminology, isServiceBased, storeSlug, store } = useStore();
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [imageIndex, setImageIndex] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+
+  // Bakery detection
+  const isBakeryStore = (() => {
+    const slug = (storeSlug || "").toLowerCase();
+    const name = (store?.name || "").toLowerCase();
+    const combined = slug + " " + name;
+    return (
+      combined.includes("bake") ||
+      combined.includes("bakery") ||
+      combined.includes("cake") ||
+      combined.includes("sweet") ||
+      combined.includes("pastry") ||
+      combined.includes("patisserie") ||
+      combined.includes("confection") ||
+      combined.includes("cupcake") ||
+      combined.includes("dessert") ||
+      combined.includes("cookie") ||
+      combined.includes("donut") ||
+      combined.includes("chocolate")
+    );
+  })();
 
   // Get prices from product schema
   const currentPrice = product.pricing?.salePrice || product.pricing?.basePrice || product.currentPrice || 0;
@@ -28,7 +49,7 @@ export default function ProductCard({ product, showSaleBadge, showNewBadge }) {
 
   // Get images
   const images = product.images || [];
-  const primaryImage = resolveImageUrl(product.primaryImage || images.find((img) => img.isPrimary)?.url || images[0]?.url) || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400";
+  const primaryImage = resolveImageUrl(product.primaryImage || images.find((img) => img.isPrimary)?.url || images[0]?.url) || "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400";
   const hoverImage = resolveImageUrl(images[1]?.url) || primaryImage;
 
   // Get duration for services
@@ -37,10 +58,17 @@ export default function ProductCard({ product, showSaleBadge, showNewBadge }) {
   const handleAddToCart = async (e) => {
     e.preventDefault();
     e.stopPropagation();
+    // For bakery, navigate to product detail for customization
+    if (isBakeryStore) {
+      navigate(`/products/${product.slug}`);
+      return;
+    }
     setIsAddingToCart(true);
     await addItem(product);
     setTimeout(() => setIsAddingToCart(false), 1000);
   };
+
+  const navigate = useNavigate();
 
   const handleWishlist = (e) => {
     e.preventDefault();
@@ -78,6 +106,12 @@ export default function ProductCard({ product, showSaleBadge, showNewBadge }) {
               {duration}
             </span>
           )}
+          {isBakeryStore && !isServiceBased && (
+            <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg flex items-center">
+              <Clock className="w-3 h-3 mr-1" />
+              Fresh Daily
+            </span>
+          )}
         </div>
 
         {/* Wishlist Button */}
@@ -94,9 +128,9 @@ export default function ProductCard({ product, showSaleBadge, showNewBadge }) {
             onClick={handleAddToCart}
             disabled={stockStatus === "out-of-stock" || isAddingToCart}
             className={`p-3 rounded-full shadow-lg transition-all hover:scale-110 ${isAddingToCart ? "bg-green-500 text-white" : "bg-white text-gray-700 hover:bg-primary-600 hover:text-white"} disabled:opacity-50 disabled:cursor-not-allowed`}
-            title={terminology?.addToCart || "Add to Cart"}
+            title={isBakeryStore ? "Customize & Order" : terminology?.addToCart || "Add to Cart"}
           >
-            {isAddingToCart ? <Check className="w-5 h-5" /> : isServiceBased ? <Calendar className="w-5 h-5" /> : <ShoppingCart className="w-5 h-5" />}
+            {isAddingToCart ? <Check className="w-5 h-5" /> : isBakeryStore ? <Cake className="w-5 h-5" /> : isServiceBased ? <Calendar className="w-5 h-5" /> : <ShoppingCart className="w-5 h-5" />}
           </button>
         </div>
       </div>
@@ -165,7 +199,13 @@ export default function ProductCard({ product, showSaleBadge, showNewBadge }) {
           onClick={handleAddToCart}
           disabled={stockStatus === "out-of-stock" || isAddingToCart}
           className={`mt-4 w-full py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center space-x-2 ${
-            isAddingToCart ? "bg-green-500 text-white" : stockStatus === "out-of-stock" ? "bg-gray-200 text-gray-500 cursor-not-allowed" : "bg-gray-900 text-white hover:bg-primary-600 hover:shadow-lg"
+            isAddingToCart
+              ? "bg-green-500 text-white"
+              : stockStatus === "out-of-stock"
+                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                : isBakeryStore
+                  ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 hover:shadow-lg"
+                  : "bg-gray-900 text-white hover:bg-primary-600 hover:shadow-lg"
           }`}
         >
           {isAddingToCart ? (
@@ -177,8 +217,8 @@ export default function ProductCard({ product, showSaleBadge, showNewBadge }) {
             <span>{terminology?.outOfStock || "Out of Stock"}</span>
           ) : (
             <>
-              {isServiceBased ? <Calendar className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
-              <span>{terminology?.addToCart || "Add to Cart"}</span>
+              {isBakeryStore ? <Cake className="w-4 h-4" /> : isServiceBased ? <Calendar className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
+              <span>{isBakeryStore ? "Customize & Order" : terminology?.addToCart || "Add to Cart"}</span>
             </>
           )}
         </button>
